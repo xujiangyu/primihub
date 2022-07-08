@@ -18,6 +18,7 @@
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
+#include <signal.h>
 
 
 #include "src/primihub/node/node.h"
