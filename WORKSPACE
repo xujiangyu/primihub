@@ -142,7 +142,7 @@ http_archive(
     name = "bazel_common",
     url = "https://github.com/google/bazel-common/archive/refs/heads/master.zip",
     strip_prefix = "bazel-common-master",
-    sha256 = "b7a8e1a4ad843df69c9714377f023276cd15c3b706a46b6e5a1dc7e101fec419",
+    # sha256 = "b7a8e1a4ad843df69c9714377f023276cd15c3b706a46b6e5a1dc7e101fec419",
 )
 
 http_archive(
