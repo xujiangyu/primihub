@@ -28,21 +28,6 @@ def _handle_timeout():
     raise TimeoutError('function timeout')
 
 
-def timeout(interval, callback=None):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            import gevent  # noqa
-            from gevent import monkey  # noqa
-            monkey.patch_all()
-
-            try:
-                gevent.with_timeout(interval, func, *args, **kwargs)
-            except gevent.timeout.Timeout as e:
-                callback() if callback else None
-        return wrapper
-    return decorator
-
-
 class Executor:
     def __init__(self):
         pass
@@ -60,7 +45,6 @@ class Executor:
             raise e
 
     @staticmethod
-    @timeout(60 * 60, _handle_timeout)  # TODO TIMEOUT 60 * 60
     def execute_py(dumps_func):
         logger.info("execute py code.")
         func_name = loads(dumps_func).__name__
