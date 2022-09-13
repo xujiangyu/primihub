@@ -98,7 +98,7 @@ class ServerChannelProxy:
     def Get(self, tag, retries=100):
         for i in range(retries):
             val = self.recv_cache_.get(tag, None)
-            if val:
+            if val is not None:
                 del self.recv_cache_[tag]
                 logger.debug("Get val with tag '{}' finish.".format(tag))
                 return val
