@@ -1507,6 +1507,7 @@ def xgb_host_logic(cry_pri="plaintext"):
             Classification_eva.get_result(Y, y_pre, indicator_file_path)
 
         # xgb_host.predict_prob(X_host).to_csv(predict_file_path)
+    proxy_server.StopRecvLoop()
 
 
 @ph.context.function(role='guest', protocol='xgboost', datasets=['guest_dataset'], port='9000', task_type="regression")
@@ -1649,3 +1650,4 @@ def xgb_guest_logic(cry_pri="plaintext"):
             pickle.dump(xgb_guest.lookup_table_sum, fl)
         xgb_guest.predict(X_guest)
         # xgb_guest.predict(X_guest)
+    proxy_server.StopRecvLoop()
