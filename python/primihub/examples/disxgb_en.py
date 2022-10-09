@@ -62,7 +62,7 @@ class ClientChannelProxy:
     # Send val and it's tag to server side, server
     # has cached val when the method return.
     def Remote(self, val, tag):
-        msg = {"v": val, "tag": tag}
+        msg = {"v": pickle.dumps(val), "tag": tag}
         self.chann_.send(msg)
         _ = self.chann_.recv()
         logger.debug(
@@ -143,7 +143,7 @@ class ServerChannelProxy:
             if val is not None:
                 del self.recv_cache_[tag]
                 logger.debug("Get val with tag '{}' finish.".format(tag))
-                return val
+                return pickle.loads(val)
 
             if (end-start) > max_time:
                 logger.warn(
@@ -1475,15 +1475,17 @@ def xgb_host_logic(cry_pri="paillier"):
             pickle.dump(xgb_host.lookup_table_sum, fl)
 
         # y_pre = xgb_host.predict_prob(X_host)
-        # y_train_pre = xgb_host.predict_prob(X_host)
-        # y_train_pre.to_csv(predict_file_path)
-        # y_train_true = Y
+        y_train_pre = xgb_host.predict_prob(X_host)
+        y_train_pre.to_csv(predict_file_path)
+        y_train_true = Y
         # Y_true = {"train": y_train_true, "test": y_true}
         # Y_pre = {"train": y_train_pre, "test": y_pre}
-        # if eva_type == 'regression':
-        #     Regression_eva.get_result(Y_true, Y_pre, indicator_file_path)
-        # elif eva_type == 'classification':
-        #     Classification_eva.get_result(Y_true, Y_pre, indicator_file_path)
+        Y_true = {"train": y_train_true}
+        Y_pre = {"train": y_train_pre}
+        if eva_type == 'regression':
+            Regression_eva.get_result(Y_true, Y_pre, indicator_file_path)
+        elif eva_type == 'classification':
+            Classification_eva.get_result(Y_true, Y_pre, indicator_file_path)
 
     elif cry_pri == "plaintext":
         xgb_host = XGB_HOST(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1,
@@ -1517,6 +1519,7 @@ def xgb_host_logic(cry_pri="paillier"):
             pickle.dump(xgb_host.tree_structure, fm)
         with open(lookup_file_path, 'wb') as fl:
             pickle.dump(xgb_host.lookup_table_sum, fl)
+        # y_pre = xgb_host.predict_prob(data_test)
         # y_pre = xgb_host.predict_prob(data_test)
         # if eva_type == 'regression':
         #     Regression_eva.get_result(y_true, y_pre, indicator_file_path)
@@ -1665,4 +1668,4 @@ def xgb_guest_logic(cry_pri="paillier"):
         with open(lookup_file_path, 'wb') as fl:
             pickle.dump(xgb_guest.lookup_table_sum, fl)
         # xgb_guest.predict(data_test)
-        # xgb_guest.predict(X_guest)
+        xgb_guest.predict(X_guest)
