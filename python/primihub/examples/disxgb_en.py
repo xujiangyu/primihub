@@ -132,6 +132,8 @@ class ServerChannelProxy:
             logger.warn(
                 "Remove value with tag '{}', not used until now.".format(key))
         del self.recv_cache_
+        self.chann_.socket.close()
+        # self.chann_.socket.destroy()
 
     # Get value from cache, and the check will repeat at most 'retries' times,
     # and sleep 0.3s after each check to avoid check all the time.
