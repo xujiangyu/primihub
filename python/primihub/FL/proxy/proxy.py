@@ -88,9 +88,10 @@ class ServerChannelProxy:
         self.recv_loop_fut_.result()
         logger.info("Recv loop already exit, clean cached value.")
         key_list = list(self.recv_cache_.keys())
-        for key in key_list: 
+        for key in key_list:
             del self.recv_cache_[key]
-            logger.warn("Remove value with tag '{}', not used until now.".format(key))
+            logger.warn(
+                "Remove value with tag '{}', not used until now.".format(key))
         del self.recv_cache_
 
     # Get value from cache, and the check will repeat at most 'retries' times,
@@ -98,7 +99,7 @@ class ServerChannelProxy:
     def Get(self, tag, retries=100):
         for i in range(retries):
             val = self.recv_cache_.get(tag, None)
-            if val:
+            if val is not None:
                 del self.recv_cache_[tag]
                 logger.debug("Get val with tag '{}' finish.".format(tag))
                 return val
