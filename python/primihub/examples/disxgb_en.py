@@ -18,7 +18,9 @@
 import primihub as ph
 from primihub import dataset, context
 from primihub.primitive.opt_paillier_c2py_warpper import *
-from primihub.channel.zmq_channel import IOService, Session
+# from primihub.channel.zmq_channel import IOService, Session
+from primihub.FL.proxy.proxy import ServerChannelProxy
+from primihub.FL.proxy.proxy import ClientChannelProxy
 from primihub.FL.model.xgboost.xgb_guest_en import XGB_GUEST_EN
 from primihub.FL.model.xgboost.xgb_host_en import XGB_HOST_EN
 from primihub.FL.model.xgboost.xgb_guest import XGB_GUEST
@@ -59,10 +61,21 @@ max_depth = 1
 @ph.context.function(role='host', protocol='xgboost', datasets=['label_dataset'], port='8000', task_type="regression")
 def xgb_host_logic(cry_pri="paillier"):
     logger.info("start xgb host logic...")
-    logger.info(ph.context.Context.dataset_map)
-    logger.info(ph.context.Context.node_addr_map)
-    logger.info(ph.context.Context.role_nodeid_map)
-    logger.info(ph.context.Context.params_map)
+
+    role_node_map = ph.context.Context.get_role_node_map()
+    node_addr_map = ph.context.Context.get_node_addr_map()
+    dataset_map = ph.context.Context.dataset_map
+
+    logger.debug(
+        "dataset_map {}".format(dataset_map))
+
+    logger.debug(
+        "role_nodeid_map {}".format(role_node_map))
+
+    logger.debug(
+        "node_addr_map {}".format(node_addr_map))
+
+    data_key = list(dataset_map.keys())[0]
 
     eva_type = ph.context.Context.params_map.get("taskType", None)
     if eva_type is None:
@@ -78,7 +91,11 @@ def xgb_host_logic(cry_pri="paillier"):
 
     logger.info("Current task type is {}.".format(eva_type))
 
-    data = ph.dataset.read(dataset_key="label_dataset").df_data
+    # 读取注册数据
+    data = ph.dataset.read(dataset_key=data_key).df_data
+
+    print("host data: ", data)
+
     columns_label_data = data.columns.tolist()
     for index, row in data.iterrows():
         for name in columns_label_data:
