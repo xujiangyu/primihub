@@ -1497,7 +1497,7 @@ def xgb_guest_logic(cry_pri="paillier"):
     if cry_pri == "paillier":
         xgb_guest = XGB_GUEST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1, min_child_weight=1,
                                  objective='linear',
-                                 sid=1, proxy_server=proxy_server, proxy_client_guest=proxy_client_host)  # noqa
+                                 sid=1, proxy_server=proxy_server, proxy_client_host=proxy_client_host)  # noqa
         # channel.send(b'guest ready')
         # pub = xgb_guest.channel.recv()
         pub = proxy_server.Get('xgb_pub')
