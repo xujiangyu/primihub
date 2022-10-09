@@ -728,22 +728,22 @@ class XGB_HOST:
 
         best_var, best_cut, GH_best = self.find_split(GH_host, GH_guest)
         if best_var is None:
-            # self.proxy_client_guest.Romote("True", 'best_var')
+            # self.proxy_client_guest.Remote("True", 'best_var')
             best_var = "True"
 
-        self.proxy_client_guest.Romote(best_var, 'best_var')
+        self.proxy_client_guest.Remote(best_var, 'best_var')
         if best_var == "True":
             return None
         else:
             # self.channel.send(best_var)
-            # self.proxy_client_guest.Romote(best_var, 'best_var')
+            # self.proxy_client_guest.Remote(best_var, 'best_var')
             # # flag = self.channel.recv()
             # if flag:
             if best_var not in [x for x in X_host.columns]:
                 var_cut_GH = {'best_var': best_var, 'best_cut': best_cut,
                               'GH_best': GH_best, 'f_t': f_t}
                 # self.channel.send(data)
-                self.proxy_client_guest.Romote(var_cut_GH, 'var_cut_GH')
+                self.proxy_client_guest.Remote(var_cut_GH, 'var_cut_GH')
 
                 # id_w_gh = self.channel.recv()
                 id_w_gh = self.proxy_server.Get('id_w_gh')
