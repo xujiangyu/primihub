@@ -134,7 +134,7 @@ class ServerChannelProxy:
         # del self.recv_cache_
         logger.info("Release system resource!")
         self.chann_.socket.close()
-        self.chann_.context.destroy()
+        # self.chann_.context.destroy()
         # self.chann_.socket.destroy()
 
     # Get value from cache, and the check will repeat at most 'retries' times,
