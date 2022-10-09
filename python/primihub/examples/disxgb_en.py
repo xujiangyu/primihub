@@ -135,7 +135,7 @@ class ServerChannelProxy:
 
     # Get value from cache, and the check will repeat at most 'retries' times,
     # and sleep 0.3s after each check to avoid check all the time.
-    def Get(self, tag, max_time=10000):
+    def Get(self, tag, max_time=10000, interval=0.1):
         start = time.time()
         while True:
             val = self.recv_cache_.get(tag, None)
@@ -150,7 +150,7 @@ class ServerChannelProxy:
                     "Can't get value for tag '{}', timeout.".format(tag))
                 break
 
-            time.sleep(0.3)
+            time.sleep(interval)
 
         return None
 
