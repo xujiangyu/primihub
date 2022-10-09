@@ -234,26 +234,6 @@ class XGB_GUEST:
             #         i = i + 1
         return GH
 
-    # def find_split(self, GH):
-    #     # Find the feature corresponding to the best split and the split value
-    #     GH_best = pd.DataFrame(columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
-    #     max_gain = 0
-    #     for item in GH.index:
-    #         gain = GH.loc[item, 'G_left'] ** 2 / (GH.loc[item, 'H_left'] + self.reg_lambda) + \
-    #                GH.loc[item, 'G_right'] ** 2 / (GH.loc[item, 'H_right'] + self.reg_lambda) - \
-    #                (GH.loc[item, 'G_left'] + GH.loc[item, 'G_right']) ** 2 / (
-    #                        GH.loc[item, 'H_left'] + GH.loc[item, 'H_right'] + + self.reg_lambda)
-    #         gain = gain / 2 - self.gamma
-    #         if gain > max_gain:
-    #             max_gain = gain
-    #             GH_best.loc[0, 'G_left'] = GH.loc[item, 'G_left']
-    #             GH_best.loc[0, 'G_right'] = GH.loc[item, 'G_right']
-    #             GH_best.loc[0, 'H_left'] = GH.loc[item, 'H_left']
-    #             GH_best.loc[0, 'H_right'] = GH.loc[item, 'H_right']
-    #             GH_best.loc[0, 'var'] = GH.loc[item, 'var']
-    #             GH_best.loc[0, 'cut'] = GH.loc[item, 'cut']
-    #     return GH_best
-
     def split(self, X, best_var, best_cut, GH_best, w):
         # Calculate the weight of leaf nodes after splitting
         # print("=====guest index====", X.index, best_cut)
@@ -1520,13 +1500,13 @@ def xgb_host_logic(cry_pri="paillier"):
         with open(lookup_file_path, 'wb') as fl:
             pickle.dump(xgb_host.lookup_table_sum, fl)
         # y_pre = xgb_host.predict_prob(data_test)
-        # y_pre = xgb_host.predict_prob(data_test)
-        # if eva_type == 'regression':
-        #     Regression_eva.get_result(y_true, y_pre, indicator_file_path)
-        # elif eva_type == 'classification':
-        #     Classification_eva.get_result(y_true, y_pre, indicator_file_path)
+        y_pre = xgb_host.predict_prob(X_host)
+        if eva_type == 'regression':
+            Regression_eva.get_result(Y, y_pre, indicator_file_path)
+        elif eva_type == 'classification':
+            Classification_eva.get_result(Y, y_pre, indicator_file_path)
 
-        # xgb_host.predict_prob(data_test).to_csv(predict_file_path)
+        xgb_host.predict_prob(X_host).to_csv(predict_file_path)
 
 
 @ph.context.function(role='guest', protocol='xgboost', datasets=['guest_dataset'], port='9000', task_type="regression")
