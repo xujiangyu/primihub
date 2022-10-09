@@ -36,7 +36,7 @@ from primihub.primitive.opt_paillier_c2py_warpper import *
 import time
 import pandas as pd
 import numpy as np
-
+import copy
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
