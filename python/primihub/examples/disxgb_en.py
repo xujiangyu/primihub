@@ -134,6 +134,7 @@ class ServerChannelProxy:
         # del self.recv_cache_
         logger.info("Release system resource!")
         self.chann_.socket.close()
+        # self.chann_.term()
         # self.chann_.context.destroy()
         # self.chann_.socket.destroy()
 
@@ -316,7 +317,7 @@ class XGB_GUEST:
 
         # right tree
         self.cart_tree(X_guest_gh.loc[id_right], mdep+1)
-        self.proxy_server.StopRecvLoop()
+        # self.proxy_server.StopRecvLoop()
 
     def host_record(self, record_id, id_list, tree, X):
         id_after_record = {"id_left": [], "id_right": []}
@@ -546,7 +547,7 @@ class XGB_GUEST_EN:
 
         # right tree
         self.cart_tree(X_guest_gh.loc[id_right], mdep + 1, pub)
-        self.proxy_server.StopRecvLoop()
+        # self.proxy_server.StopRecvLoop()
 
     def host_record(self, record_id, id_list, tree, X):
         id_after_record = {"id_left": [], "id_right": []}
@@ -739,7 +740,7 @@ class XGB_HOST:
 
         self.proxy_client_guest.Remote(best_var, 'best_var')
         if best_var == "True":
-            self.proxy_server.StopRecvLoop()
+            # self.proxy_server.StopRecvLoop()
             return None
         else:
             # self.channel.send(best_var)
@@ -815,7 +816,7 @@ class XGB_HOST:
             else:
                 tree_structure[(party_id, record_id)][(
                     'right', w_right)] = copy.deepcopy(result_right)
-        self.proxy_server.StopRecvLoop()
+        # self.proxy_server.StopRecvLoop()
 
         return tree_structure, f_t
 
@@ -1062,7 +1063,7 @@ class XGB_HOST_EN:
 
         self.proxy_client_guest.Remote(best_var, 'best_var')
         if best_var == "True":
-            self.proxy_server.StopRecvLoop()
+            # self.proxy_server.StopRecvLoop()
             return None
             # self.channel.send("True")
             # self.channel.recv()
@@ -1191,7 +1192,7 @@ class XGB_HOST_EN:
             else:
                 tree_structure[(party_id, record_id)][(
                     'right', w_right)] = copy.deepcopy(result_right)
-        self.proxy_server.StopRecvLoop()
+        # self.proxy_server.StopRecvLoop()
 
         return tree_structure, f_t
 
