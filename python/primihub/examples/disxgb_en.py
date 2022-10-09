@@ -823,7 +823,7 @@ class XGB_HOST:
                 need_record = {'id': id, 'record_id': record_id, 'tree': t}
                 self.proxy_client_guest.Remote(need_record, 'need_record')
                 # split_id = self.channel.recv()
-                split_id = self.proxy_client_guest.Get('id_after_record')
+                split_id = self.proxy_server.Get('id_after_record')
                 id_left = split_id['id_left']
                 id_right = split_id['id_right']
                 if id_left == [] or id_right == []:
