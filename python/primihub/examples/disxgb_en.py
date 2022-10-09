@@ -1292,7 +1292,7 @@ max_depth = 1
 
 
 @ph.context.function(role='host', protocol='xgboost', datasets=['label_dataset'], port='8000', task_type="regression")
-def xgb_host_logic(cry_pri="paillier"):
+def xgb_host_logic(cry_pri="plaintext"):
     logger.info("start xgb host logic...")
 
     role_node_map = ph.context.Context.get_role_node_map()
@@ -1510,7 +1510,7 @@ def xgb_host_logic(cry_pri="paillier"):
 
 
 @ph.context.function(role='guest', protocol='xgboost', datasets=['guest_dataset'], port='9000', task_type="regression")
-def xgb_guest_logic(cry_pri="paillier"):
+def xgb_guest_logic(cry_pri="plaintext"):
     print("start xgb guest logic...")
     # ios = IOService()
     # logger.info(ph.context.Context.dataset_map)
