@@ -150,6 +150,8 @@ class ServerChannelProxy:
                     "Can't get value for tag '{}', timeout.".format(tag))
                 break
 
+            time.sleep(0.3)
+
         return None
 
 
