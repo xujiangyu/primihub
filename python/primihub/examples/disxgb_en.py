@@ -1627,7 +1627,7 @@ def xgb_guest_logic(cry_pri="plaintext"):
     elif cry_pri == "plaintext":
         xgb_guest = XGB_GUEST(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1, min_child_weight=1,
                               objective='linear',
-                              sid=1, proxy_server=proxy_server, proxy_client_guest=proxy_client_host)  # noqa
+                              sid=1, proxy_server=proxy_server, proxy_client_host=proxy_client_host)  # noqa
         # channel.send(b'guest ready')
         for t in range(xgb_guest.n_estimators):
             xgb_guest.record = 0
