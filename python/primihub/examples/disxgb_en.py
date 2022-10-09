@@ -132,6 +132,7 @@ class ServerChannelProxy:
             logger.warn(
                 "Remove value with tag '{}', not used until now.".format(key))
         del self.recv_cache_
+        logger.info("Release system resource!")
         self.chann_.socket.close()
         # self.chann_.socket.destroy()
 
