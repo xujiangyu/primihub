@@ -1318,6 +1318,7 @@ def xgb_host_logic(cry_pri="paillier"):
                     gh_en.loc[index, item] = opt_paillier_encrypt_crt(xgb_host.pub, xgb_host.prv,
                                                                       int(gh.loc[index, item]))
             logger.info("Encrypt finish.")
+            logger.info("gh_en %s".format(gh_en))
 
             # xgb_host.channel.send(gh_en)
             proxy_client_guest.Remote(gh_en, "gh_en")
