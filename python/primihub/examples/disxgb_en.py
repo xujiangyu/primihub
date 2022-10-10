@@ -1305,7 +1305,8 @@ max_depth = 1
 
 
 @ph.context.function(role='host', protocol='xgboost', datasets=['label_dataset'], port='8000', task_type="regression")
-def xgb_host_logic(cry_pri="paillier"):
+# def xgb_host_logic(cry_pri="paillier"):
+def xgb_host_logic(cry_pri="plaintext"):
     logger.info("start xgb host logic...")
 
     role_node_map = ph.context.Context.get_role_node_map()
@@ -1344,21 +1345,6 @@ def xgb_host_logic(cry_pri="paillier"):
 
     print("host data: ", data)
 
-    # columns_label_data = data.columns.tolist()
-    # for index, row in data.iterrows():
-    #     for name in columns_label_data:
-    #         temp = row[name]
-    #         try:
-    #             float(temp)
-    #         except ValueError:
-    #             logger.error(
-    #                 "Find illegal string '{}', it's not a digit string.".format(temp))
-    #             return
-
-    # Get host's ip address.
-    # role_node_map = ph.context.Context.get_role_node_map()
-    # node_addr_map = ph.context.Context.get_node_addr_map()
-
     if len(role_node_map["host"]) != 1:
         logger.error("Current node of host party: {}".format(
             role_node_map["host"]))
@@ -1378,32 +1364,9 @@ def xgb_host_logic(cry_pri="paillier"):
     proxy_client_guest = ClientChannelProxy(guest_ip, guest_port,
                                             "guest")
 
-    # host_node = role_node_map["host"][0]
-    # next_peer = node_addr_map[host_node]
-    # ip, port = next_peer.split(":")
-    # ios = IOService()
-    # server = Session(ios, ip, port, "server")
-    # channel = server.addChannel()
-
-    # dim = data.shape[0]
-    # dim_train = dim / 10 * 8
-    # data_train = data.loc[:dim_train, :].reset_index(drop=True)
-    # data_test = data.loc[dim_train:dim, :].reset_index(drop=True)
-    # label_true = ['Class']
-    # y_true = data_test['Class'].values
-    # data_test = data_test[
-    #     [x for x in data_test.columns if x not in label_true]
-    # ]
-    # logger.info(data_test.head())
     Y = data.pop('Class').values
     X_host = data.copy()
     X_host.pop('Sample code number')
-
-    # labels = ['Class']  # noqa
-    # X_host = data_train[
-    #     [x for x in data.columns if x not in labels]
-    # ]
-    # Y = data_train['Class'].values
 
     if cry_pri == "paillier":
         xgb_host = XGB_HOST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1,
@@ -1430,7 +1393,6 @@ def xgb_host_logic(cry_pri="paillier"):
             logger.info("Encrypt finish.")
             logger.info("gh_en %s".format(gh_en))
 
-            # xgb_host.channel.send(gh_en)
             proxy_client_guest.Remote(gh_en, "gh_en")
 
             # GH_guest_en = xgb_host.channel.recv()
@@ -1524,7 +1486,8 @@ def xgb_host_logic(cry_pri="paillier"):
 
 
 @ph.context.function(role='guest', protocol='xgboost', datasets=['guest_dataset'], port='9000', task_type="regression")
-def xgb_guest_logic(cry_pri="paillier"):
+# def xgb_guest_logic(cry_pri="paillier"):
+def xgb_guest_logic(cry_pri="plaintext"):
     print("start xgb guest logic...")
     # ios = IOService()
     # logger.info(ph.context.Context.dataset_map)
@@ -1560,22 +1523,6 @@ def xgb_guest_logic(cry_pri="paillier"):
 
     logger.info("Current task type is {}.".format(eva_type))
 
-    # Check dataset.
-    # columns_label_data = data.columns.tolist()
-    # for index, row in data.iterrows():
-    #     for name in columns_label_data:
-    #         temp = row[name]
-    #         try:
-    #             float(temp)
-    #         except ValueError:
-    #             logger.error(
-    #                 "Find illegal string '{}', it's not a digit string.".format(temp))
-    #             return
-
-    # Get host's ip address.
-    # role_node_map = ph.context.Context.get_role_node_map()
-    # node_addr_map = ph.context.Context.get_node_addr_map()
-
     if len(role_node_map["host"]) != 1:
         logger.error("Current node of host party: {}".format(
             role_node_map["host"]))
@@ -1596,18 +1543,6 @@ def xgb_guest_logic(cry_pri="paillier"):
                                            "host")
     data = ph.dataset.read(dataset_key=data_key).df_data
     X_guest = data
-
-    # host_node = role_node_map["host"][0]
-    # next_peer = node_addr_map[host_node]
-
-    # ip, port = next_peer.split(":")
-    # client = Session(ios, ip, port, "client")
-    # channel = client.addChannel()
-
-    # dim = data.shape[0]
-    # dim_train = dim / 10 * 8
-    # X_guest = data.loc[:dim_train, :].reset_index(drop=True)
-    # data_test = data.loc[dim_train:dim, :].reset_index(drop=True)
 
     if cry_pri == "paillier":
         xgb_guest = XGB_GUEST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1, min_child_weight=1,
