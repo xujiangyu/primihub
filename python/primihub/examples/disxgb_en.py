@@ -1476,10 +1476,11 @@ def xgb_host_logic(cry_pri="plaintext"):
             pickle.dump(xgb_host.lookup_table_sum, fl)
         # y_pre = xgb_host.predict_prob(data_test)
         y_pre = xgb_host.predict_prob(X_host)
-        if eva_type == 'regression':
-            Regression_eva.get_result(Y, y_pre, indicator_file_path)
-        elif eva_type == 'classification':
-            Classification_eva.get_result(Y, y_pre, indicator_file_path)
+        print("==========", Y, y_pre)
+        # if eva_type == 'regression':
+        #     Regression_eva.get_result(Y, y_pre, indicator_file_path)
+        # elif eva_type == 'classification':
+        #     Classification_eva.get_result(Y, y_pre, indicator_file_path)
 
         # xgb_host.predict_prob(X_host).to_csv(predict_file_path)
     proxy_server.StopRecvLoop()
