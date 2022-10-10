@@ -1299,14 +1299,15 @@ ph.context.Context.func_params_map = {
 }
 
 # Number of tree to fit.
-num_tree = 1
+num_tree = 2
 # Max depth of each tree.
-max_depth = 1
+max_depth = 5
 
 
 @ph.context.function(role='host', protocol='xgboost', datasets=['label_dataset'], port='8000', task_type="regression")
 # def xgb_host_logic(cry_pri="paillier"):
 def xgb_host_logic(cry_pri="plaintext"):
+    start = time.time()
     logger.info("start xgb host logic...")
 
     role_node_map = ph.context.Context.get_role_node_map()
@@ -1484,6 +1485,8 @@ def xgb_host_logic(cry_pri="plaintext"):
 
         # xgb_host.predict_prob(X_host).to_csv(predict_file_path)
     proxy_server.StopRecvLoop()
+    end = time.time()
+    logger.info("lasting time for xgb %s".format(end-start))
 
 
 @ph.context.function(role='guest', protocol='xgboost', datasets=['guest_dataset'], port='9000', task_type="regression")
