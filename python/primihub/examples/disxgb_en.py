@@ -1467,6 +1467,10 @@ def xgb_host_logic(cry_pri="plaintext"):
                 columns=['record_id', 'feature_id', 'threshold_value'])
             f_t = pd.Series([0] * Y.shape[0])
             gh = xgb_host.get_gh(y_hat, Y)
+
+            # convert g and h to ints
+            ratio = 10**3
+            gh = (gh * ratio).astype('int')
             # gh_en = pd.DataFrame(columns=['g', 'h'])
 
             gh.apply(opt_paillier_encrypt_crt,
