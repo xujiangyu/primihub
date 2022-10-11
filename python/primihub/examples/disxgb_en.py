@@ -1467,10 +1467,12 @@ def xgb_host_logic(cry_pri="plaintext"):
                 columns=['record_id', 'feature_id', 'threshold_value'])
             f_t = pd.Series([0] * Y.shape[0])
             gh = xgb_host.get_gh(y_hat, Y)
-            gh_en = pd.DataFrame(columns=['g', 'h'])
+            # gh_en = pd.DataFrame(columns=['g', 'h'])
 
-            gh_en.apply(opt_paillier_encrypt_crt,
-                        args=(xgb_host.pub, xgb_host.prv))
+            gh.apply(opt_paillier_encrypt_crt,
+                     args=(xgb_host.pub, xgb_host.prv))
+
+            gh_en = gh.copy()
             # for item in gh.columns:
             #     for index in gh.index:
             #         gh_en.loc[index, item] = opt_paillier_encrypt_crt(xgb_host.pub, xgb_host.prv,
