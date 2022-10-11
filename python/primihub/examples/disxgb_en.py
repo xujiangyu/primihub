@@ -41,6 +41,8 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 from primihub.channel.zmq_channel import IOService, Session
+import functools
+
 
 LOG_FORMAT = "[%(asctime)s][%(filename)s:%(lineno)d][%(levelname)s] %(message)s"
 DATE_FORMAT = "%m/%d/%Y %H:%M:%S %p"
@@ -390,65 +392,106 @@ class XGB_GUEST_EN:
         self.lookup_table_sum = {}
 
     def get_GH(self, X, pub):
+
+        def opt_paillier_add(x, y):
+            return opt_paillier_add(pub, x, y)
+
         # Calculate G_left、G_right、H_left、H_right under feature segmentation
         arr = np.zeros((X.shape[0] * 10, 6))
-        GH = pd.DataFrame(
-            arr, columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
+        # GH = pd.DataFrame(
+        #     arr, columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
+        # GH.apply(opt_paillier_encrypt, args=(pub,))
+        G_lefts = []
+        G_rights = []
+        H_lefts = []
+        H_rights = []
+        vars = []
+        cuts = []
+
         i = 0
         for item in [x for x in X.columns if x not in ['g', 'h']]:
             # Categorical variables using greedy algorithm
             # if len(list(set(X[item]))) < 5:
-            for cuts in list(set(X[item])):
-                if self.min_child_sample:
-                    if (X.loc[X[item] < cuts].shape[0] < self.min_child_sample) \
-                            | (X.loc[X[item] >= cuts].shape[0] < self.min_child_sample):
-                        continue
-                for ind in X.index:
-                    if X.loc[ind, item] < cuts:
-                        if GH.loc[i, 'G_left'] == 0:
-                            GH.loc[i, 'G_left'] = X.loc[ind, 'g']
-                        else:
-                            GH.loc[i, 'G_left'] = opt_paillier_add(
-                                pub, GH.loc[i, 'G_left'], X.loc[ind, 'g'])
-                        if GH.loc[i, 'H_left'] == 0:
-                            GH.loc[i, 'H_left'] = X.loc[ind, 'h']
-                        else:
-                            GH.loc[i, 'H_left'] = opt_paillier_add(
-                                pub, GH.loc[i, 'H_left'], X.loc[ind, 'h'])
-                    else:
-                        if GH.loc[i, 'G_right'] == 0:
-                            GH.loc[i, 'G_right'] = X.loc[ind, 'g']
-                        else:
-                            GH.loc[i, 'G_right'] = opt_paillier_add(
-                                pub, GH.loc[i, 'G_right'], X.loc[ind, 'g'])
-                        if GH.loc[i, 'H_right'] == 0:
-                            GH.loc[i, 'H_right'] = X.loc[ind, 'h']
-                        else:
-                            GH.loc[i, 'H_right'] = opt_paillier_add(
-                                pub, GH.loc[i, 'H_right'], X.loc[ind, 'h'])
-                GH.loc[i, 'var'] = item
-                GH.loc[i, 'cut'] = cuts
-                i = i + 1
-            # Continuous variables using approximation algorithm
-            # else:
-            #     old_list = list(set(X[item]))
-            #     new_list = []
-            #     # four candidate points
-            #     j = int(len(old_list) / 4)
-            #     for z in range(0, len(old_list), j):
-            #         new_list.append(old_list[z])
-            #     for cuts in new_list:
-            #         if self.min_child_sample:
-            #             if (X.loc[X[item] < cuts].shape[0] < self.min_child_sample) \
-            #                     | (X.loc[X[item] >= cuts].shape[0] < self.min_child_sample):
-            #                 continue
-            #         GH.loc[i, 'G_left'] = X.loc[X[item] < cuts, 'g'].sum()
-            #         GH.loc[i, 'G_right'] = X.loc[X[item] >= cuts, 'g'].sum()
-            #         GH.loc[i, 'H_left'] = X.loc[X[item] < cuts, 'h'].sum()
-            #         GH.loc[i, 'H_right'] = X.loc[X[item] >= cuts, 'h'].sum()
-            #         GH.loc[i, 'var'] = item
-            #         GH.loc[i, 'cut'] = cuts
-            #         i = i + 1
+            for tmp_cut in list(set(X[item])):
+                flag = (X[item] < tmp_cut)
+                less_sum = sum(flag.astype('int'))
+                great_sum = sum((1-flag).astype('int'))
+                G_left_g = X.loc[flag, 'g']
+                G_right_g = X.loc[(1-flag).astype('bool'), 'g']
+                H_left_h = X.loc[flag, 'h']
+                H_right_h = X.loc[(1-flag).astype('bool'), 'h']
+
+                tmp_g_left = functools.reduce(opt_paillier_add, G_left_g)
+                tmp_g_right = functools.reduce(opt_paillier_add, G_right_g)
+                tmp_h_left = functools.reduce(opt_paillier_add, H_left_h)
+                tmp_h_right = functools.reduce(opt_paillier_add, H_right_h)
+
+                G_lefts.append(tmp_g_left)
+                G_rights.append(tmp_g_right)
+                H_lefts.append(tmp_h_left)
+                H_rights.append(tmp_h_right)
+                vars.append(item)
+                cuts.append(tmp_cut)
+
+        # GH = pd.DataFrame(
+        #     arr, columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
+        GH = pd.DataFrame(
+            {'G_left': G_lefts, 'G_right': G_rights, 'H_left': H_lefts, 'H_right': H_rights, 'var': vars, 'cut': cuts})
+
+        # tmp_g_right = GH.loc[i, 'G_left']
+
+        # if self.min_child_sample:
+        #     # if (X.loc[X[item] < cuts].shape[0] < self.min_child_sample) \
+        #     #         | (X.loc[X[item] >= cuts].shape[0] < self.min_child_sample):
+        #     if (less_sum < self.min_child_sample) \
+        #             | (great_sum < self.min_child_sample):
+        #         continue
+        # for ind in X.index:
+        #     if X.loc[ind, item] < cuts:
+        #         if GH.loc[i, 'G_left'] == 0:
+        #             GH.loc[i, 'G_left'] = X.loc[ind, 'g']
+        #         else:
+        #             GH.loc[i, 'G_left'] = opt_paillier_add(
+        #                 pub, GH.loc[i, 'G_left'], X.loc[ind, 'g'])
+        #         if GH.loc[i, 'H_left'] == 0:
+        #             GH.loc[i, 'H_left'] = X.loc[ind, 'h']
+        #         else:
+        #             GH.loc[i, 'H_left'] = opt_paillier_add(
+        #                 pub, GH.loc[i, 'H_left'], X.loc[ind, 'h'])
+        #     else:
+        #         if GH.loc[i, 'G_right'] == 0:
+        #             GH.loc[i, 'G_right'] = X.loc[ind, 'g']
+        #         else:
+        #             GH.loc[i, 'G_right'] = opt_paillier_add(
+        #                 pub, GH.loc[i, 'G_right'], X.loc[ind, 'g'])
+        #         if GH.loc[i, 'H_right'] == 0:
+        #             GH.loc[i, 'H_right'] = X.loc[ind, 'h']
+        #         else:
+        #             GH.loc[i, 'H_right'] = opt_paillier_add(
+        #                 pub, GH.loc[i, 'H_right'], X.loc[ind, 'h'])
+        # GH.loc[i, 'var'] = item
+        # GH.loc[i, 'cut'] = cuts
+        # i = i + 1
+        # Continuous variables using approximation algorithm
+        # else:
+        #     old_list = list(set(X[item]))
+        #     new_list = []
+        #     # four candidate points
+        #     j = int(len(old_list) / 4)
+        #     for z in range(0, len(old_list), j):
+        #         new_list.append(old_list[z])
+        #     for cuts in new_list:
+        #         if self.min_child_sample:
+        #             if (X.loc[X[item] < cuts].shape[0] < self.min_child_sample) \
+        #                     | (X.loc[X[item] >= cuts].shape[0] < self.min_child_sample):
+        #                 continue
+        #         GH.loc[i, 'G_left'] = X.loc[X[item] < cuts, 'g'].sum()
+        #         GH.loc[i, 'G_right'] = X.loc[X[item] >= cuts, 'g'].sum()
+        #         GH.loc[i, 'H_left'] = X.loc[X[item] < cuts, 'h'].sum()
+        #         GH.loc[i, 'H_right'] = X.loc[X[item] >= cuts, 'h'].sum()
+        #         GH.loc[i, 'var'] = item
+        #         GH.loc[i, 'cut'] = cuts
+        #         i = i + 1
         return GH
 
     # def find_split(self, GH):
@@ -1089,33 +1132,47 @@ class XGB_HOST_EN:
                 party_id = id_w_gh['party_id']
                 tree_structure = {(party_id, record_id): {}}
                 gh_sum_right_en = id_w_gh['gh_sum_right']
-                gh_sum_right = pd.DataFrame(
-                    columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
-                for item in [x for x in gh_sum_right_en.columns if x not in ['cut', 'var']]:
-                    for index in gh_sum_right_en.index:
-                        if gh_sum_right_en.loc[index, item] == 0:
-                            gh_sum_right.loc[index, item] = 0
-                        else:
-                            gh_sum_right.loc[index, item] = opt_paillier_decrypt_crt(self.pub, self.prv,
-                                                                                     gh_sum_right_en.loc[index, item])
-                for item in [x for x in gh_sum_right_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
-                    for index in gh_sum_right_en.index:
-                        gh_sum_right.loc[index,
-                                         item] = gh_sum_right_en.loc[index, item]
+                vars = gh_sum_right_en.pop('var')
+                cuts = gh_sum_right_en.pop('cut')
+                gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
+                                                     args=(self.pub,
+                                                           self.prv))
+                gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
+
+                # gh_sum_right = pd.DataFrame(
+                #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
+                # for item in [x for x in gh_sum_right_en.columns if x not in ['cut', 'var']]:
+                #     for index in gh_sum_right_en.index:
+                #         if gh_sum_right_en.loc[index, item] == 0:
+                #             gh_sum_right.loc[index, item] = 0
+                #         else:
+                #             gh_sum_right.loc[index, item] = opt_paillier_decrypt_crt(self.pub, self.prv,
+                #                                                                      gh_sum_right_en.loc[index, item])
+                # for item in [x for x in gh_sum_right_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
+                #     for index in gh_sum_right_en.index:
+                #         gh_sum_right.loc[index,
+                #                          item] = gh_sum_right_en.loc[index, item]
                 gh_sum_left_en = id_w_gh['gh_sum_left']
-                gh_sum_left = pd.DataFrame(
-                    columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
-                for item in [x for x in gh_sum_left_en.columns if x not in ['cut', 'var']]:
-                    for index in gh_sum_left_en.index:
-                        if gh_sum_left_en.loc[index, item] == 0:
-                            gh_sum_left.loc[index, item] = 0
-                        else:
-                            gh_sum_left.loc[index, item] = opt_paillier_decrypt_crt(self.pub, self.prv,
-                                                                                    gh_sum_left_en.loc[index, item])
-                for item in [x for x in gh_sum_left_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
-                    for index in gh_sum_left_en.index:
-                        gh_sum_left.loc[index,
-                                        item] = gh_sum_left_en.loc[index, item]
+                vars1 = gh_sum_left_en['var']
+                cuts1 = gh_sum_left_en['cut']
+                gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
+                                                   args=(self.pub,
+                                                         self.prv))
+
+                gh_sum_left = pd.concat([gh_sum_left, vars1, cuts1], axis=1)
+                # gh_sum_left = pd.DataFrame(
+                #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
+                # for item in [x for x in gh_sum_left_en.columns if x not in ['cut', 'var']]:
+                #     for index in gh_sum_left_en.index:
+                #         if gh_sum_left_en.loc[index, item] == 0:
+                #             gh_sum_left.loc[index, item] = 0
+                #         else:
+                #             gh_sum_left.loc[index, item] = opt_paillier_decrypt_crt(self.pub, self.prv,
+                #                                                                     gh_sum_left_en.loc[index, item])
+                # for item in [x for x in gh_sum_left_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
+                #     for index in gh_sum_left_en.index:
+                #         gh_sum_left.loc[index,
+                #                         item] = gh_sum_left_en.loc[index, item]
             else:
                 self.lookup_table.loc[self.record, 'record_id'] = self.record
                 self.lookup_table.loc[self.record, 'feature_id'] = best_var
@@ -1136,33 +1193,49 @@ class XGB_HOST_EN:
                 # gh_sum_dic = self.channel.recv()
                 gh_sum_dic = self.proxy_server.Get('gh_sum_dic')
                 gh_sum_right_en = gh_sum_dic['gh_sum_right']
-                gh_sum_right = pd.DataFrame(
-                    columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
-                for item in [x for x in gh_sum_right_en.columns if x not in ['cut', 'var']]:
-                    for index in gh_sum_right_en.index:
-                        if gh_sum_right_en.loc[index, item] == 0:
-                            gh_sum_right.loc[index, item] = 0
-                        else:
-                            gh_sum_right.loc[index, item] = opt_paillier_decrypt_crt(self.pub, self.prv,
-                                                                                     gh_sum_right_en.loc[index, item])
-                for item in [x for x in gh_sum_right_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
-                    for index in gh_sum_right_en.index:
-                        gh_sum_right.loc[index,
-                                         item] = gh_sum_right_en.loc[index, item]
+
+                vars = gh_sum_right_en.pop('var')
+                cuts = gh_sum_right_en.pop('cut')
+                gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
+                                                     args=(self.pub,
+                                                           self.prv))
+                gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
+
+                # gh_sum_right = pd.DataFrame(
+                #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
+                # for item in [x for x in gh_sum_right_en.columns if x not in ['cut', 'var']]:
+                #     for index in gh_sum_right_en.index:
+                #         if gh_sum_right_en.loc[index, item] == 0:
+                #             gh_sum_right.loc[index, item] = 0
+                #         else:
+                #             gh_sum_right.loc[index, item] = opt_paillier_decrypt_crt(self.pub, self.prv,
+                #                                                                      gh_sum_right_en.loc[index, item])
+                # for item in [x for x in gh_sum_right_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
+                #     for index in gh_sum_right_en.index:
+                #         gh_sum_right.loc[index,
+                #                          item] = gh_sum_right_en.loc[index, item]
                 gh_sum_left_en = gh_sum_dic['gh_sum_left']
-                gh_sum_left = pd.DataFrame(
-                    columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
-                for item in [x for x in gh_sum_left_en.columns if x not in ['cut', 'var']]:
-                    for index in gh_sum_left_en.index:
-                        if gh_sum_left_en.loc[index, item] == 0:
-                            gh_sum_left.loc[index, item] = 0
-                        else:
-                            gh_sum_left.loc[index, item] = opt_paillier_decrypt_crt(self.pub, self.prv,
-                                                                                    gh_sum_left_en.loc[index, item])
-                for item in [x for x in gh_sum_left_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
-                    for index in gh_sum_left_en.index:
-                        gh_sum_left.loc[index,
-                                        item] = gh_sum_left_en.loc[index, item]
+
+                vars1 = gh_sum_left_en['var']
+                cuts1 = gh_sum_left_en['cut']
+                gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
+                                                   args=(self.pub,
+                                                         self.prv))
+
+                gh_sum_left = pd.concat([gh_sum_left, vars1, cuts1], axis=1)
+                # gh_sum_left = pd.DataFrame(
+                #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
+                # for item in [x for x in gh_sum_left_en.columns if x not in ['cut', 'var']]:
+                #     for index in gh_sum_left_en.index:
+                #         if gh_sum_left_en.loc[index, item] == 0:
+                #             gh_sum_left.loc[index, item] = 0
+                #         else:
+                #             gh_sum_left.loc[index, item] = opt_paillier_decrypt_crt(self.pub, self.prv,
+                #                                                                     gh_sum_left_en.loc[index, item])
+                # for item in [x for x in gh_sum_left_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
+                #     for index in gh_sum_left_en.index:
+                #         gh_sum_left.loc[index,
+                #                         item] = gh_sum_left_en.loc[index, item]
 
             print("=====x host index=====", X_host.index)
             print("host shape",
@@ -1304,7 +1377,7 @@ num_tree = 2
 max_depth = 5
 
 
-@ph.context.function(role='host', protocol='xgboost', datasets=['label_dataset'], port='8000', task_type="regression")
+@ ph.context.function(role='host', protocol='xgboost', datasets=['label_dataset'], port='8000', task_type="regression")
 # def xgb_host_logic(cry_pri="paillier"):
 def xgb_host_logic(cry_pri="plaintext"):
     start = time.time()
@@ -1387,10 +1460,13 @@ def xgb_host_logic(cry_pri="plaintext"):
             f_t = pd.Series([0] * Y.shape[0])
             gh = xgb_host.get_gh(y_hat, Y)
             gh_en = pd.DataFrame(columns=['g', 'h'])
-            for item in gh.columns:
-                for index in gh.index:
-                    gh_en.loc[index, item] = opt_paillier_encrypt_crt(xgb_host.pub, xgb_host.prv,
-                                                                      int(gh.loc[index, item]))
+
+            gh_en.apply(opt_paillier_encrypt_crt,
+                        args=(xgb_host.pub, xgb_host.prv))
+            # for item in gh.columns:
+            #     for index in gh.index:
+            #         gh_en.loc[index, item] = opt_paillier_encrypt_crt(xgb_host.pub, xgb_host.prv,
+            #                                                           int(gh.loc[index, item]))
             logger.info("Encrypt finish.")
             logger.info("gh_en %s".format(gh_en))
 
@@ -1398,21 +1474,29 @@ def xgb_host_logic(cry_pri="plaintext"):
 
             # GH_guest_en = xgb_host.channel.recv()
             GH_guest_en = proxy_server.Get('gh_sum')
-            GH_guest = pd.DataFrame(
-                columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
-            for item in [x for x in GH_guest_en.columns if x not in ['cut', 'var']]:
-                for index in GH_guest_en.index:
-                    if GH_guest_en.loc[index, item] == 0:
-                        GH_guest.loc[index, item] = 0
-                    else:
-                        GH_guest.loc[index, item] = opt_paillier_decrypt_crt(xgb_host.pub, xgb_host.prv,
-                                                                             GH_guest_en.loc[index, item])
 
-            logger.info("Decrypt finish.")
+            vars = GH_guest_en.pop('var')
+            cuts = GH_guest_en.pop('cut')
+            GH_guest = GH_guest_en.apply(
+                opt_paillier_decrypt_crt, args=(xgb_host.pub, xgb_host.prv))
 
-            for item in [x for x in GH_guest_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
-                for index in GH_guest_en.index:
-                    GH_guest.loc[index, item] = GH_guest_en.loc[index, item]
+            GH_guest = pd.concat([GH_guest, vars, cuts], axis=1)
+
+            # GH_guest = pd.DataFrame(
+            #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
+            # for item in [x for x in GH_guest_en.columns if x not in ['cut', 'var']]:
+            #     for index in GH_guest_en.index:
+            #         if GH_guest_en.loc[index, item] == 0:
+            #             GH_guest.loc[index, item] = 0
+            #         else:
+            #             GH_guest.loc[index, item] = opt_paillier_decrypt_crt(xgb_host.pub, xgb_host.prv,
+            #                                                                  GH_guest_en.loc[index, item])
+
+            # logger.info("Decrypt finish.")
+
+            # for item in [x for x in GH_guest_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
+            #     for index in GH_guest_en.index:
+            #         GH_guest.loc[index, item] = GH_guest_en.loc[index, item]
 
             xgb_host.tree_structure[t + 1], f_t = xgb_host.xgb_tree(X_host, GH_guest, gh, f_t, 0)  # noqa
             xgb_host.lookup_table_sum[t + 1] = xgb_host.lookup_table
@@ -1489,7 +1573,7 @@ def xgb_host_logic(cry_pri="plaintext"):
     logger.info("lasting time for xgb %s".format(end-start))
 
 
-@ph.context.function(role='guest', protocol='xgboost', datasets=['guest_dataset'], port='9000', task_type="regression")
+@ ph.context.function(role='guest', protocol='xgboost', datasets=['guest_dataset'], port='9000', task_type="regression")
 # def xgb_guest_logic(cry_pri="paillier"):
 def xgb_guest_logic(cry_pri="plaintext"):
     print("start xgb guest logic...")
