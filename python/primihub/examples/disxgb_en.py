@@ -412,10 +412,18 @@ class XGB_GUEST_EN:
         for item in [x for x in X.columns if x not in ['g', 'h']]:
             # Categorical variables using greedy algorithm
             # if len(list(set(X[item]))) < 5:
+
             for tmp_cut in list(set(X[item])):
+
                 flag = (X[item] < tmp_cut)
                 less_sum = sum(flag.astype('int'))
                 great_sum = sum((1-flag).astype('int'))
+
+                if self.min_child_sample:
+                    if (less_sum < self.min_child_sample) \
+                            | (great_sum < self.min_child_sample):
+                        continue
+
                 G_left_g = X.loc[flag, 'g']
                 G_right_g = X.loc[(1-flag).astype('bool'), 'g']
                 H_left_h = X.loc[flag, 'h']
