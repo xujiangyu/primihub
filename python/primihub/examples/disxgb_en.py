@@ -416,7 +416,7 @@ class XGB_GUEST_EN:
         #     return opt_paillier_add(pub, x, y)
 
         # Calculate G_left、G_right、H_left、H_right under feature segmentation
-        arr = np.zeros((X.shape[0] * 10, 6))
+        # arr = np.zeros((X.shape[0] * 10, 6))
         # GH = pd.DataFrame(
         #     arr, columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
         # GH.apply(opt_paillier_encrypt, args=(pub,))
@@ -477,6 +477,8 @@ class XGB_GUEST_EN:
         GH = pd.DataFrame(
             {'G_left': G_lefts, 'G_right': G_rights, 'H_left': H_lefts, 'H_right': H_rights, 'var': vars, 'cut': cuts})
 
+        return GH
+
         # tmp_g_right = GH.loc[i, 'G_left']
 
         # if self.min_child_sample:
@@ -531,7 +533,7 @@ class XGB_GUEST_EN:
         #         GH.loc[i, 'var'] = item
         #         GH.loc[i, 'cut'] = cuts
         #         i = i + 1
-        return GH
+        # return GH
 
     # def find_split(self, GH):
     #     # Find the feature corresponding to the best split and the split value
@@ -1737,6 +1739,7 @@ def xgb_guest_logic(cry_pri="paillier"):
             print("X_guest_gh: ", X_guest_gh.head)
             gh_sum = xgb_guest.get_GH(X_guest_gh, pub)
             # xgb_guest.channel.send(gh_sum)
+            print("gh_sum: ", gh_sum)
             proxy_client_host.Remote(gh_sum, "gh_sum")
             xgb_guest.cart_tree(X_guest_gh, 0, pub)
             xgb_guest.lookup_table_sum[t + 1] = xgb_guest.lookup_table
