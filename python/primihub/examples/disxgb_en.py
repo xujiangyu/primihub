@@ -190,7 +190,7 @@ class XGB_GUEST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=None,
+                 min_child_sample=2,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -383,7 +383,7 @@ class XGB_GUEST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=None,
+                 min_child_sample=2,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -447,12 +447,22 @@ class XGB_GUEST_EN:
                 G_right_g = X.loc[(1-flag).astype('bool'), 'g'].values.tolist()
                 H_left_h = X.loc[flag, 'h'].values.tolist()
                 H_right_h = X.loc[(1-flag).astype('bool'), 'h'].values.tolist()
-                print("++++++++++", G_left_g, G_right_g, H_left_h, H_right_h)
+                # print("++++++++++", G_left_g, G_right_g, H_left_h, H_right_h)
 
-                tmp_g_left = functools.reduce(opt_pai_add, G_left_g)
-                tmp_g_right = functools.reduce(opt_pai_add, G_right_g)
-                tmp_h_left = functools.reduce(opt_pai_add, H_left_h)
-                tmp_h_right = functools.reduce(opt_pai_add, H_right_h)
+                # tmp_g_left = functools.reduce(opt_pai_add, G_left_g)
+                # opt_paillier_add(pub, x, y)
+                tmp_g_left = functools.reduce(
+                    lambda x, y: opt_paillier_add(pub, x, y), G_left_g)
+                tmp_g_right = functools.reduce(
+                    lambda x, y: opt_paillier_add(pub, x, y), G_right_g)
+                tmp_h_left = functools.reduce(
+                    lambda x, y: opt_paillier_add(pub, x, y), H_left_h)
+                tmp_h_right = functools.reduce(
+                    lambda x, y: opt_paillier_add(pub, x, y), H_right_h)
+
+                # tmp_g_right = functools.reduce(opt_pai_add, G_right_g)
+                # tmp_h_left = functools.reduce(opt_pai_add, H_left_h)
+                # tmp_h_right = functools.reduce(opt_pai_add, H_right_h)
 
                 G_lefts.append(tmp_g_left)
                 G_rights.append(tmp_g_right)
@@ -662,7 +672,7 @@ class XGB_HOST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=None,
+                 min_child_sample=2,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -981,7 +991,7 @@ class XGB_HOST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=None,
+                 min_child_sample=2,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
