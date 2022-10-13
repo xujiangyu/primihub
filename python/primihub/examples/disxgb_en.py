@@ -621,6 +621,7 @@ class XGB_GUEST_EN:
             gh_sum_right = self.get_GH(X_guest_gh.loc[id_right], pub)
             gh_sum_dic = {'gh_sum_right': gh_sum_right,
                           'gh_sum_left': gh_sum_left}
+            self.proxy_client_host.Remote(gh_sum_dic, 'gh_sum_dic')
             # self.channel.send(
             # )
 
@@ -862,7 +863,7 @@ class XGB_HOST:
                 self.record = self.record + 1
                 f_t, id_right, id_left, w_right, w_left = self.split(
                     X_host, best_var, best_cut, GH_best, f_t)
-                print("host split", X_host.index)
+                print("host split: ", X_host.index)
                 id_dic = {'id_right': id_right,
                           'id_left': id_left, "best_cut": best_cut}
                 # self.channel.send(
