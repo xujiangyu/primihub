@@ -1489,6 +1489,7 @@ def xgb_host_logic(cry_pri="paillier"):
     X_host = data.copy()
     X_host.pop('Sample code number')
     public_k, priv_k = paillier.generate_paillier_keypair()
+    logger.info("paillier pub key is : {}".format(public_k))
 
     if cry_pri == "paillier":
         xgb_host = XGB_HOST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1, pub=public_k, prv=priv_k,
