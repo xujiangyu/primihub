@@ -66,8 +66,8 @@ def phe_add(enc1, enc2):
     return enc1 + enc2
 
 
-def opt_paillier_add(pub, x, y):
-    return opt_paillier_add(pub, x, y)
+# def opt_paillier_add(pub, x, y):
+#     return opt_paillier_add(pub, x, y)
 
 
 class ClientChannelProxy:
@@ -412,8 +412,8 @@ class XGB_GUEST_EN:
 
     def get_GH(self, X, pub):
         # global
-        def opt_pai_add(x, y):
-            return opt_paillier_add(pub, x, y)
+        # def opt_pai_add(x, y):
+        #     return opt_paillier_add(pub, x, y)
 
         # Calculate G_left、G_right、H_left、H_right under feature segmentation
         arr = np.zeros((X.shape[0] * 10, 6))
