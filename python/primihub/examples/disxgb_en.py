@@ -17,6 +17,7 @@
  """
 import primihub as ph
 from primihub import dataset, context
+from phe import paillier
 from primihub.primitive.opt_paillier_c2py_warpper import *
 # from primihub.channel.zmq_channel import IOService, Session
 # from primihub.FL.proxy.proxy import ServerChannelProxy
@@ -49,6 +50,18 @@ DATE_FORMAT = "%m/%d/%Y %H:%M:%S %p"
 logging.basicConfig(level=logging.DEBUG,
                     format=LOG_FORMAT, datefmt=DATE_FORMAT)
 logger = logging.getLogger("proxy")
+
+
+def phe_map_enc(pub, item):
+    return pub.encrypt(item)
+
+
+def phe_map_dec(pri, item):
+    return pri.decrypt(item)
+
+
+def phe_add(enc1, enc2):
+    return enc1 + enc2
 
 
 class ClientChannelProxy:
@@ -429,10 +442,10 @@ class XGB_GUEST_EN:
                 H_left_h = X.loc[flag, 'h']
                 H_right_h = X.loc[(1-flag).astype('bool'), 'h']
 
-                tmp_g_left = functools.reduce(opt_paillier_add, G_left_g)
-                tmp_g_right = functools.reduce(opt_paillier_add, G_right_g)
-                tmp_h_left = functools.reduce(opt_paillier_add, H_left_h)
-                tmp_h_right = functools.reduce(opt_paillier_add, H_right_h)
+                tmp_g_left = functools.reduce(phe_add, G_left_g)
+                tmp_g_right = functools.reduce(phe_add, G_right_g)
+                tmp_h_left = functools.reduce(phe_add, H_left_h)
+                tmp_h_right = functools.reduce(phe_add, H_right_h)
 
                 G_lefts.append(tmp_g_left)
                 G_rights.append(tmp_g_right)
@@ -954,7 +967,7 @@ class XGB_HOST:
 
 
 class XGB_HOST_EN:
-    def __init__(self, proxy_server=None, proxy_client_guest=None,
+    def __init__(self, proxy_server=None, proxy_client_guest=None, pub=None, prv=None,
                  base_score=0.5,
                  max_depth=3,
                  n_estimators=10,
@@ -984,7 +997,7 @@ class XGB_HOST_EN:
         self.min_child_sample = min_child_sample
         self.min_child_weight = min_child_weight
         self.objective = objective
-        pub, prv = opt_paillier_keygen(random_seed)
+        # pub, prv = opt_paillier_keygen(random_seed)
         self.pub = pub
         self.prv = prv
         self.sid = sid
@@ -1142,9 +1155,15 @@ class XGB_HOST_EN:
                 gh_sum_right_en = id_w_gh['gh_sum_right']
                 vars = gh_sum_right_en.pop('var')
                 cuts = gh_sum_right_en.pop('cut')
-                gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
-                                                     args=(self.pub,
-                                                           self.prv))
+                gh_sum_right_en_li = gh_sum_right_en.values.tolist()
+
+                gh_sum_right_dec_li = list(map(
+                    lambda x: phe_map_dec(self.prv, x), gh_sum_right_en_li))
+                gh_sum_right = pd.DataFrame(
+                    {'gh_sum_right': gh_sum_right_dec_li})
+                # gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
+                #                                      args=(self.pub,
+                #                                            self.prv))
                 gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
 
                 # gh_sum_right = pd.DataFrame(
@@ -1163,9 +1182,17 @@ class XGB_HOST_EN:
                 gh_sum_left_en = id_w_gh['gh_sum_left']
                 vars1 = gh_sum_left_en['var']
                 cuts1 = gh_sum_left_en['cut']
-                gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
-                                                   args=(self.pub,
-                                                         self.prv))
+
+                gh_sum_left_en_li = gh_sum_left_en.values.tolist()
+
+                gh_sum_left_dec_li = list(map(
+                    lambda x: phe_map_dec(self.prv, x), gh_sum_left_en_li))
+
+                gh_sum_left = pd.DataFrame({'gh_sum_left': gh_sum_left_dec_li})
+
+                # gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
+                #                                    args=(self.pub,
+                #                                          self.prv))
 
                 gh_sum_left = pd.concat([gh_sum_left, vars1, cuts1], axis=1)
                 # gh_sum_left = pd.DataFrame(
@@ -1204,9 +1231,15 @@ class XGB_HOST_EN:
 
                 vars = gh_sum_right_en.pop('var')
                 cuts = gh_sum_right_en.pop('cut')
-                gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
-                                                     args=(self.pub,
-                                                           self.prv))
+                gh_sum_right_en_li = gh_sum_right_en.values.tolist()
+
+                gh_sum_right_dec_li = list(map(
+                    lambda x: phe_map_dec(self.prv, x), gh_sum_right_en_li))
+                gh_sum_right = pd.DataFrame(
+                    {'gh_sum_right': gh_sum_right_dec_li})
+                # gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
+                #                                      args=(self.pub,
+                #                                            self.prv))
                 gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
 
                 # gh_sum_right = pd.DataFrame(
@@ -1226,9 +1259,15 @@ class XGB_HOST_EN:
 
                 vars1 = gh_sum_left_en['var']
                 cuts1 = gh_sum_left_en['cut']
-                gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
-                                                   args=(self.pub,
-                                                         self.prv))
+                gh_sum_right_en_li = gh_sum_right_en.values.tolist()
+
+                gh_sum_right_dec_li = list(map(
+                    lambda x: phe_map_dec(self.prv, x), gh_sum_right_en_li))
+                gh_sum_right = pd.DataFrame(
+                    {'gh_sum_right': gh_sum_right_dec_li})
+                # gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
+                #                                    args=(self.pub,
+                #                                          self.prv))
 
                 gh_sum_left = pd.concat([gh_sum_left, vars1, cuts1], axis=1)
                 # gh_sum_left = pd.DataFrame(
@@ -1449,13 +1488,15 @@ def xgb_host_logic(cry_pri="paillier"):
     Y = data.pop('Class').values
     X_host = data.copy()
     X_host.pop('Sample code number')
+    public_k, priv_k = paillier.generate_paillier_keypair()
 
     if cry_pri == "paillier":
-        xgb_host = XGB_HOST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1,
+        xgb_host = XGB_HOST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1, pub=public_k, prv=priv_k,
                                sid=0, min_child_weight=1, objective='linear', proxy_server=proxy_server, proxy_client_guest=proxy_client_guest)
         # channel.recv()
         # xgb_host.channel.send(xgb_host.pub)
-        proxy_client_guest.Remote(xgb_host.pub, "xgb_pub")
+        # proxy_client_guest.Remote(xgb_host.pub, "xgb_pub")
+        proxy_client_guest.Remote(public_k, "xgb_pub")
         # print(xgb_host.channel.recv())
         y_hat = np.array([0.5] * Y.shape[0])
 
@@ -1469,14 +1510,19 @@ def xgb_host_logic(cry_pri="paillier"):
             gh = xgb_host.get_gh(y_hat, Y)
 
             # convert g and h to ints
-            ratio = 10**3
-            gh = (gh * ratio).astype('int')
+            # ratio = 10**3
+            # gh = (gh * ratio).astype('int')
             # gh_en = pd.DataFrame(columns=['g', 'h'])
+            flat_gh = gh.values.flatten().tolist()
+            enc_flat_gh = list(
+                map(lambda x: phe_map_enc(public_k, x), flat_gh))
+            enc_gh = np.array(enc_flat_gh).reshape((-1, 2))
+            enc_gh_df = pd.DataFrame(enc_gh, columns=['g', 'h'])
 
-            gh.apply(opt_paillier_encrypt_crt,
-                     args=(xgb_host.pub, xgb_host.prv))
+            # gh.apply(opt_paillier_encrypt_crt,
+            #          args=(xgb_host.pub, xgb_host.prv))
 
-            gh_en = gh.copy()
+            gh_en = enc_gh_df
             # for item in gh.columns:
             #     for index in gh.index:
             #         gh_en.loc[index, item] = opt_paillier_encrypt_crt(xgb_host.pub, xgb_host.prv,
