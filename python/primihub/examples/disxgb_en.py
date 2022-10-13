@@ -1489,7 +1489,7 @@ def xgb_host_logic(cry_pri="paillier"):
     X_host = data.copy()
     X_host.pop('Sample code number')
     public_k, priv_k = paillier.generate_paillier_keypair()
-    logger.info("paillier pub key is : {}".format(public_k))
+    logger.debug("paillier pub key is : {}".format(public_k))
 
     if cry_pri == "paillier":
         xgb_host = XGB_HOST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1, pub=public_k, prv=priv_k,
@@ -1502,7 +1502,7 @@ def xgb_host_logic(cry_pri="paillier"):
         y_hat = np.array([0.5] * Y.shape[0])
 
         for t in range(xgb_host.n_estimators):
-            logger.info("Begin to trian tree {}.".format(t + 1))
+            logger.debug("Begin to trian tree {}.".format(t + 1))
 
             xgb_host.record = 0
             xgb_host.lookup_table = pd.DataFrame(
@@ -1528,8 +1528,8 @@ def xgb_host_logic(cry_pri="paillier"):
             #     for index in gh.index:
             #         gh_en.loc[index, item] = opt_paillier_encrypt_crt(xgb_host.pub, xgb_host.prv,
             #                                                           int(gh.loc[index, item]))
-            logger.info("Encrypt finish.")
-            logger.info("gh_en %s".format(gh_en))
+            logger.debug("Encrypt finish.")
+            logger.debug("gh_en %s".format(gh_en))
 
             proxy_client_guest.Remote(gh_en, "gh_en")
 
@@ -1538,8 +1538,12 @@ def xgb_host_logic(cry_pri="paillier"):
 
             vars = GH_guest_en.pop('var')
             cuts = GH_guest_en.pop('cut')
-            GH_guest = GH_guest_en.apply(
-                opt_paillier_decrypt_crt, args=(xgb_host.pub, xgb_host.prv))
+            GH_guest_en_li = GH_guest_en.values.tolist()
+            GH_guest_dec_li = list(map(
+                lambda x: phe_map_dec(priv_k, x), GH_guest_en_li))
+            # GH_guest = GH_guest_en.apply(
+            #     opt_paillier_decrypt_crt, args=(xgb_host.pub, xgb_host.prv))
+            GH_guest = pd.DataFrame({'gh_sum': GH_guest_dec_li})
 
             GH_guest = pd.concat([GH_guest, vars, cuts], axis=1)
 
