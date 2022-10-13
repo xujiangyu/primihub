@@ -447,7 +447,8 @@ class XGB_GUEST_EN:
                 G_right_g = X.loc[(1-flag).astype('bool'), 'g'].values.tolist()
                 H_left_h = X.loc[flag, 'h'].values.tolist()
                 H_right_h = X.loc[(1-flag).astype('bool'), 'h'].values.tolist()
-                # print("++++++++++", G_left_g, G_right_g, H_left_h, H_right_h)
+                print("++++++++++", len(G_left_g), len(G_right_g),
+                      len(H_left_h), len(H_right_h))
 
                 # tmp_g_left = functools.reduce(opt_pai_add, G_left_g)
                 # opt_paillier_add(pub, x, y)
