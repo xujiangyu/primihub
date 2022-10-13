@@ -411,6 +411,7 @@ class XGB_GUEST_EN:
         self.lookup_table_sum = {}
 
     def get_GH(self, X, pub):
+        # global
         def opt_pai_add(x, y):
             return opt_paillier_add(pub, x, y)
 
@@ -442,10 +443,10 @@ class XGB_GUEST_EN:
                             | (great_sum < self.min_child_sample):
                         continue
 
-                G_left_g = X.loc[flag, 'g']
-                G_right_g = X.loc[(1-flag).astype('bool'), 'g']
-                H_left_h = X.loc[flag, 'h']
-                H_right_h = X.loc[(1-flag).astype('bool'), 'h']
+                G_left_g = X.loc[flag, 'g'].values.tolist()
+                G_right_g = X.loc[(1-flag).astype('bool'), 'g'].values.tolist()
+                H_left_h = X.loc[flag, 'h'].values.tolist()
+                H_right_h = X.loc[(1-flag).astype('bool'), 'h'].values.tolist()
 
                 tmp_g_left = functools.reduce(opt_pai_add, G_left_g)
                 tmp_g_right = functools.reduce(opt_pai_add, G_right_g)
