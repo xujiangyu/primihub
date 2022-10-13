@@ -1560,12 +1560,15 @@ def xgb_host_logic(cry_pri="paillier"):
 
             vars = GH_guest_en.pop('var')
             cuts = GH_guest_en.pop('cut')
-            GH_guest_en_li = GH_guest_en.values.tolist()
+            tmp_shape = GH_guest_en.shape
+            tmp_columns = GH_guest_en.columns
+            GH_guest_en_li = GH_guest_en.values.flatten().tolist()
             GH_guest_dec_li = list(map(
                 lambda x: phe_map_dec(xgb_host.pub, xgb_host.prv, x), GH_guest_en_li))
             # GH_guest = GH_guest_en.apply(
             #     opt_paillier_decrypt_crt, args=(xgb_host.pub, xgb_host.prv))
-            GH_guest = pd.DataFrame({'gh_sum': GH_guest_dec_li})
+            GH_guest_dec = np.array(GH_guest_dec_li).reshape(tmp_shape)
+            GH_guest = pd.DataFrame(GH_guest_dec, columns=tmp_columns)
 
             GH_guest = pd.concat([GH_guest, vars, cuts], axis=1)
             print("GH_guest: ", GH_guest)
