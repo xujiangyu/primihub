@@ -1143,6 +1143,7 @@ class XGB_HOST_EN:
         GH_host = self.get_GH(X_host_gh)
 
         best_var, best_cut, GH_best = self.find_split(GH_host, GH_guest)
+        print("best_var: ", best_var)
         if best_var is None:
             best_var = "True"
 
@@ -1569,6 +1570,7 @@ def xgb_host_logic(cry_pri="paillier"):
             #     opt_paillier_decrypt_crt, args=(xgb_host.pub, xgb_host.prv))
             GH_guest_dec = np.array(GH_guest_dec_li).reshape(tmp_shape)
             GH_guest = pd.DataFrame(GH_guest_dec, columns=tmp_columns)
+            GH_guest = GH_guest / ratio
 
             GH_guest = pd.concat([GH_guest, vars, cuts], axis=1)
             print("GH_guest: ", GH_guest)
