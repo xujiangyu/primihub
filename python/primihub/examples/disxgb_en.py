@@ -190,7 +190,7 @@ class XGB_GUEST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=2,
+                 min_child_sample=100,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -383,7 +383,7 @@ class XGB_GUEST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=2,
+                 min_child_sample=100,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -673,7 +673,7 @@ class XGB_HOST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=2,
+                 min_child_sample=100,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -993,7 +993,7 @@ class XGB_HOST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=2,
+                 min_child_sample=100,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -1566,6 +1566,7 @@ def xgb_host_logic(cry_pri="paillier"):
             GH_guest = pd.DataFrame({'gh_sum': GH_guest_dec_li})
 
             GH_guest = pd.concat([GH_guest, vars, cuts], axis=1)
+            print("GH_guest: ", GH_guest)
 
             # GH_guest = pd.DataFrame(
             #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
