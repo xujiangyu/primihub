@@ -821,6 +821,7 @@ class XGB_HOST:
             best_var = "True"
 
         self.proxy_client_guest.Remote(best_var, 'best_var')
+        print("best_var: ", best_var)
         if best_var == "True":
             # self.proxy_server.StopRecvLoop()
             return None
