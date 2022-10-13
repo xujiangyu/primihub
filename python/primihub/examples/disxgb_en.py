@@ -1282,12 +1282,12 @@ class XGB_HOST_EN:
 
                 vars1 = gh_sum_left_en['var']
                 cuts1 = gh_sum_left_en['cut']
-                gh_sum_right_en_li = gh_sum_right_en.values.tolist()
+                gh_sum_left_en_li = gh_sum_left_en.values.tolist()
 
-                gh_sum_right_dec_li = list(map(
-                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))
-                gh_sum_right = pd.DataFrame(
-                    {'gh_sum_right': gh_sum_right_dec_li})
+                gh_sum_left_dec_li = list(map(
+                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))
+                gh_sum_left = pd.DataFrame(
+                    {'gh_sum_left': gh_sum_left_dec_li})
                 # gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
                 #                                    args=(self.pub,
                 #                                          self.prv))
