@@ -1517,8 +1517,8 @@ def xgb_host_logic(cry_pri="paillier"):
             gh = xgb_host.get_gh(y_hat, Y)
 
             # convert g and h to ints
-            # ratio = 10**3
-            # gh = (gh * ratio).astype('int')
+            ratio = 10**3
+            gh = (gh * ratio).astype('int')
             # gh_en = pd.DataFrame(columns=['g', 'h'])
             flat_gh = gh.values.flatten().tolist()
             enc_flat_gh = list(
