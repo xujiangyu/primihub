@@ -447,6 +447,7 @@ class XGB_GUEST_EN:
                 G_right_g = X.loc[(1-flag).astype('bool'), 'g'].values.tolist()
                 H_left_h = X.loc[flag, 'h'].values.tolist()
                 H_right_h = X.loc[(1-flag).astype('bool'), 'h'].values.tolist()
+                print("++++++++++", G_left_g, G_right_g, H_left_h, H_right_h)
 
                 tmp_g_left = functools.reduce(opt_pai_add, G_left_g)
                 tmp_g_right = functools.reduce(opt_pai_add, G_right_g)
@@ -1720,7 +1721,7 @@ def xgb_guest_logic(cry_pri="paillier"):
             # gh_host = xgb_guest.channel.recv()
             gh_host = proxy_server.Get('gh_en')
             X_guest_gh = pd.concat([X_guest, gh_host], axis=1)
-            print(X_guest_gh)
+            print("X_guest_gh: ", X_guest_gh.head)
             gh_sum = xgb_guest.get_GH(X_guest_gh, pub)
             # xgb_guest.channel.send(gh_sum)
             proxy_client_host.Remote(gh_sum, "gh_sum")
