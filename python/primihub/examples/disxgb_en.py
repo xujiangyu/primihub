@@ -52,16 +52,22 @@ logging.basicConfig(level=logging.DEBUG,
 logger = logging.getLogger("proxy")
 
 
-def phe_map_enc(pub, item):
-    return pub.encrypt(item)
+def phe_map_enc(pub, pri, item):
+    # return pub.encrypt(item)
+    return opt_paillier_encrypt_crt(pub, pri, item)
 
 
-def phe_map_dec(pri, item):
-    return pri.decrypt(item)
+def phe_map_dec(pub, prv, item):
+    # return pri.decrypt(item)
+    return opt_paillier_decrypt_crt(pub, prv, item)
 
 
 def phe_add(enc1, enc2):
     return enc1 + enc2
+
+
+def opt_paillier_add(pub, x, y):
+    return opt_paillier_add(pub, x, y)
 
 
 class ClientChannelProxy:
@@ -405,8 +411,7 @@ class XGB_GUEST_EN:
         self.lookup_table_sum = {}
 
     def get_GH(self, X, pub):
-
-        def opt_paillier_add(x, y):
+        def opt_pai_add(x, y):
             return opt_paillier_add(pub, x, y)
 
         # Calculate G_left、G_right、H_left、H_right under feature segmentation
@@ -442,10 +447,10 @@ class XGB_GUEST_EN:
                 H_left_h = X.loc[flag, 'h']
                 H_right_h = X.loc[(1-flag).astype('bool'), 'h']
 
-                tmp_g_left = functools.reduce(phe_add, G_left_g)
-                tmp_g_right = functools.reduce(phe_add, G_right_g)
-                tmp_h_left = functools.reduce(phe_add, H_left_h)
-                tmp_h_right = functools.reduce(phe_add, H_right_h)
+                tmp_g_left = functools.reduce(opt_pai_add, G_left_g)
+                tmp_g_right = functools.reduce(opt_pai_add, G_right_g)
+                tmp_h_left = functools.reduce(opt_pai_add, H_left_h)
+                tmp_h_right = functools.reduce(opt_pai_add, H_right_h)
 
                 G_lefts.append(tmp_g_left)
                 G_rights.append(tmp_g_right)
@@ -967,7 +972,7 @@ class XGB_HOST:
 
 
 class XGB_HOST_EN:
-    def __init__(self, proxy_server=None, proxy_client_guest=None, pub=None, prv=None,
+    def __init__(self, proxy_server=None, proxy_client_guest=None,
                  base_score=0.5,
                  max_depth=3,
                  n_estimators=10,
@@ -997,7 +1002,7 @@ class XGB_HOST_EN:
         self.min_child_sample = min_child_sample
         self.min_child_weight = min_child_weight
         self.objective = objective
-        # pub, prv = opt_paillier_keygen(random_seed)
+        pub, prv = opt_paillier_keygen(random_seed)
         self.pub = pub
         self.prv = prv
         self.sid = sid
@@ -1158,7 +1163,7 @@ class XGB_HOST_EN:
                 gh_sum_right_en_li = gh_sum_right_en.values.tolist()
 
                 gh_sum_right_dec_li = list(map(
-                    lambda x: phe_map_dec(self.prv, x), gh_sum_right_en_li))
+                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))
                 gh_sum_right = pd.DataFrame(
                     {'gh_sum_right': gh_sum_right_dec_li})
                 # gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
@@ -1186,7 +1191,7 @@ class XGB_HOST_EN:
                 gh_sum_left_en_li = gh_sum_left_en.values.tolist()
 
                 gh_sum_left_dec_li = list(map(
-                    lambda x: phe_map_dec(self.prv, x), gh_sum_left_en_li))
+                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))
 
                 gh_sum_left = pd.DataFrame({'gh_sum_left': gh_sum_left_dec_li})
 
@@ -1234,7 +1239,7 @@ class XGB_HOST_EN:
                 gh_sum_right_en_li = gh_sum_right_en.values.tolist()
 
                 gh_sum_right_dec_li = list(map(
-                    lambda x: phe_map_dec(self.prv, x), gh_sum_right_en_li))
+                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))
                 gh_sum_right = pd.DataFrame(
                     {'gh_sum_right': gh_sum_right_dec_li})
                 # gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
@@ -1262,7 +1267,7 @@ class XGB_HOST_EN:
                 gh_sum_right_en_li = gh_sum_right_en.values.tolist()
 
                 gh_sum_right_dec_li = list(map(
-                    lambda x: phe_map_dec(self.prv, x), gh_sum_right_en_li))
+                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))
                 gh_sum_right = pd.DataFrame(
                     {'gh_sum_right': gh_sum_right_dec_li})
                 # gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
@@ -1488,17 +1493,17 @@ def xgb_host_logic(cry_pri="paillier"):
     Y = data.pop('Class').values
     X_host = data.copy()
     X_host.pop('Sample code number')
-    public_k, priv_k = paillier.generate_paillier_keypair()
+    # public_k, priv_k = paillier.generate_paillier_keypair()
     # logger.debug("paillier pub key is : {}".format(public_k))
-    print("paillier pub key is :", public_k)
+    # print("paillier pub key is :", public_k)
 
     if cry_pri == "paillier":
-        xgb_host = XGB_HOST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1, pub=public_k, prv=priv_k,
+        xgb_host = XGB_HOST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1,
                                sid=0, min_child_weight=1, objective='linear', proxy_server=proxy_server, proxy_client_guest=proxy_client_guest)
         # channel.recv()
         # xgb_host.channel.send(xgb_host.pub)
-        # proxy_client_guest.Remote(xgb_host.pub, "xgb_pub")
-        proxy_client_guest.Remote(public_k, "xgb_pub")
+        proxy_client_guest.Remote(xgb_host.pub, "xgb_pub")
+        # proxy_client_guest.Remote(public_k, "xgb_pub")
         # print(xgb_host.channel.recv())
         y_hat = np.array([0.5] * Y.shape[0])
 
@@ -1517,7 +1522,7 @@ def xgb_host_logic(cry_pri="paillier"):
             # gh_en = pd.DataFrame(columns=['g', 'h'])
             flat_gh = gh.values.flatten().tolist()
             enc_flat_gh = list(
-                map(lambda x: phe_map_enc(public_k, x), flat_gh))
+                map(lambda x: phe_map_enc(xgb_host.pub, xgb_host.prv, x), flat_gh))
             enc_gh = np.array(enc_flat_gh).reshape((-1, 2))
             enc_gh_df = pd.DataFrame(enc_gh, columns=['g', 'h'])
 
@@ -1541,7 +1546,7 @@ def xgb_host_logic(cry_pri="paillier"):
             cuts = GH_guest_en.pop('cut')
             GH_guest_en_li = GH_guest_en.values.tolist()
             GH_guest_dec_li = list(map(
-                lambda x: phe_map_dec(priv_k, x), GH_guest_en_li))
+                lambda x: phe_map_dec(xgb_host.pub, xgb_host.prv, x), GH_guest_en_li))
             # GH_guest = GH_guest_en.apply(
             #     opt_paillier_decrypt_crt, args=(xgb_host.pub, xgb_host.prv))
             GH_guest = pd.DataFrame({'gh_sum': GH_guest_dec_li})
