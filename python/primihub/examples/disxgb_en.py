@@ -18,6 +18,7 @@
 import primihub as ph
 from primihub import dataset, context
 from phe import paillier
+from sklearn import metrics
 from primihub.primitive.opt_paillier_c2py_warpper import *
 # from primihub.channel.zmq_channel import IOService, Session
 # from primihub.FL.proxy.proxy import ServerChannelProxy
@@ -1438,6 +1439,11 @@ class XGB_HOST_EN:
 
         return Y
 
+    def predict(self, X: pd.DataFrame):
+        preds = self.predict_prob(X).values
+
+        return (preds >= 0.5).astype('int')
+
 
 def get_logger(name):
     LOG_FORMAT = "[%(asctime)s][%(filename)s:%(lineno)d][%(levelname)s] %(message)s"
@@ -1464,7 +1470,7 @@ num_tree = 2
 max_depth = 5
 
 
-@ ph.context.function(role='host', protocol='xgboost', datasets=['label_dataset'], port='8000', task_type="regression")
+@ ph.context.function(role='host', protocol='xgboost', datasets=['train_hetero_xgb_host'], port='8000', task_type="classify")
 def xgb_host_logic(cry_pri="paillier"):
     # def xgb_host_logic(cry_pri="plaintext"):
     start = time.time()
@@ -1525,9 +1531,9 @@ def xgb_host_logic(cry_pri="paillier"):
     proxy_client_guest = ClientChannelProxy(guest_ip, guest_port,
                                             "guest")
 
-    Y = data.pop('Class').values
+    Y = data.pop('y').values
     X_host = data.copy()
-    X_host.pop('Sample code number')
+    # X_host.pop('Sample code number')
     # public_k, priv_k = paillier.generate_paillier_keypair()
     # logger.debug("paillier pub key is : {}".format(public_k))
     # print("paillier pub key is :", public_k)
@@ -1615,6 +1621,10 @@ def xgb_host_logic(cry_pri="paillier"):
 
             logger.info("Finish to trian tree {}.".format(t + 1))
 
+        end = time.time()
+        # logger.info("lasting time for xgb %s".format(end-start))
+        print("train encrypted time for xgb: ", (end-start))
+
         predict_file_path = ph.context.Context.get_predict_file_path()
         indicator_file_path = ph.context.Context.get_indicator_file_path()
         model_file_path = ph.context.Context.get_model_file_path()
@@ -1626,17 +1636,16 @@ def xgb_host_logic(cry_pri="paillier"):
             pickle.dump(xgb_host.lookup_table_sum, fl)
 
         # y_pre = xgb_host.predict_prob(X_host)
-        y_train_pre = xgb_host.predict_prob(X_host)
-        y_train_pre.to_csv(predict_file_path)
-        y_train_true = Y
-        # Y_true = {"train": y_train_true, "test": y_true}
-        # Y_pre = {"train": y_train_pre, "test": y_pre}
-        Y_true = {"train": y_train_true}
-        Y_pre = {"train": y_train_pre}
-        if eva_type == 'regression':
-            Regression_eva.get_result(Y_true, Y_pre, indicator_file_path)
-        elif eva_type == 'classification':
-            Classification_eva.get_result(Y_true, Y_pre, indicator_file_path)
+        # y_train_pre.to_csv(predict_file_path)
+        # y_train_true = Y
+        # # Y_true = {"train": y_train_true, "test": y_true}
+        # # Y_pre = {"train": y_train_pre, "test": y_pre}
+        # Y_true = {"train": y_train_true}
+        # Y_pre = {"train": y_train_pre}
+        # if eva_type == 'regression':
+        #     Regression_eva.get_result(Y_true, Y_pre, indicator_file_path)
+        # elif eva_type == 'classification':
+        #     Classification_eva.get_result(Y_true, Y_pre, indicator_file_path)
 
     elif cry_pri == "plaintext":
         xgb_host = XGB_HOST(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1,
@@ -1670,21 +1679,34 @@ def xgb_host_logic(cry_pri="paillier"):
             pickle.dump(xgb_host.tree_structure, fm)
         with open(lookup_file_path, 'wb') as fl:
             pickle.dump(xgb_host.lookup_table_sum, fl)
+        end = time.time()
+        # logger.info("lasting time for xgb %s".format(end-start))
+        print("train plaintext time for xgb: ", (end-start))
         # y_pre = xgb_host.predict_prob(data_test)
-        y_pre = xgb_host.predict_prob(X_host)
-        print("==========", Y, y_pre)
+        # y_pre = xgb_host.predict_prob(X_host)
+        # print("==========", Y, y_pre)
         # if eva_type == 'regression':
         #     Regression_eva.get_result(Y, y_pre, indicator_file_path)
         # elif eva_type == 'classification':
         #     Classification_eva.get_result(Y, y_pre, indicator_file_path)
 
         # xgb_host.predict_prob(X_host).to_csv(predict_file_path)
+    train_pred = xgb_host.predict(X_host)
+    train_acc = metrics.accuracy_score(train_pred, Y.values)
+
+    # validate for test
+    test_host = ph.dataset.read(dataset_key='test_hetero_xgb_host').df_data
+    test_y = test_host.pop('y')
+    test_data = test_host.copy()
+    test_pred = xgb_host.predict(test_data)
+
+    test_acc = metrics.accuracy_score(test_pred, test_y.values)
+    print("train and test validate acc: ", {
+        'train_acc': train_acc, 'test_acc': test_acc})
     proxy_server.StopRecvLoop()
-    end = time.time()
-    logger.info("lasting time for xgb %s".format(end-start))
 
 
-@ ph.context.function(role='guest', protocol='xgboost', datasets=['guest_dataset'], port='9000', task_type="regression")
+@ ph.context.function(role='guest', protocol='xgboost', datasets=['train_hetero_xgb_guest'], port='9000', task_type="classify")
 def xgb_guest_logic(cry_pri="paillier"):
     # def xgb_guest_logic(cry_pri="plaintext"):
     print("start xgb guest logic...")
@@ -1796,6 +1818,12 @@ def xgb_guest_logic(cry_pri="paillier"):
 
         with open(lookup_file_path, 'wb') as fl:
             pickle.dump(xgb_guest.lookup_table_sum, fl)
-        xgb_guest.predict(X_guest)
-        # xgb_guest.predict(X_guest)
+    xgb_guest.predict(X_guest)
+
+    # validate for test
+    test_host = ph.dataset.read(
+        dataset_key='test_hetero_xgb_guest').df_data
+    xgb_guest.predict(test_host)
+
+    # xgb_guest.predict(X_guest)
     proxy_server.StopRecvLoop()
