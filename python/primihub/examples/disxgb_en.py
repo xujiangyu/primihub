@@ -778,22 +778,39 @@ class XGB_HOST:
         # Find the feature corresponding to the best split and the split value
         best_var, best_cut = None, None
         GH_best = {}
-        max_gain = 0
+        best_gain = 0
         GH = pd.concat([GH_host, GH_guest], axis=0, ignore_index=True)
-        for item in GH.index:
-            gain = GH.loc[item, 'G_left'] ** 2 / (GH.loc[item, 'H_left'] + self.reg_lambda) + \
-                GH.loc[item, 'G_right'] ** 2 / (GH.loc[item, 'H_right'] + self.reg_lambda) - \
-                (GH.loc[item, 'G_left'] + GH.loc[item, 'G_right']) ** 2 / (
-                GH.loc[item, 'H_left'] + GH.loc[item, 'H_right'] + + self.reg_lambda)
-            gain = gain / 2 - self.gamma
-            if gain > max_gain:
-                best_var = GH.loc[item, 'var']
-                best_cut = GH.loc[item, 'cut']
-                max_gain = gain
-                GH_best['G_left_best'] = GH.loc[item, 'G_left']
-                GH_best['G_right_best'] = GH.loc[item, 'G_right']
-                GH_best['H_left_best'] = GH.loc[item, 'H_left']
-                GH_best['H_right_best'] = GH.loc[item, 'H_right']
+        # GH_arr =
+        gain = GH['G_left'] ** 2 / (GH['H_left'] + self.reg_lambda) + \
+            GH['G_right'] ** 2 / (GH['H_right'] + self.reg_lambda) - \
+            (GH['G_left'] + GH['G_right']) ** 2 / (
+            GH['H_left'] + GH['H_right'] + + self.reg_lambda)
+
+        gain_val = gain.values
+        max_gain = max(gain)
+        max_index = gain_val.tolist().index(max_gain)
+        if max_gain > best_gain:
+            best_gain = max_gain
+            best_cut = GH.loc[max_index, 'cut']
+            best_var = GH.loc[max_index, 'var']
+            GH_best['G_left_best'] = GH.loc[max_index, 'G_left']
+            GH_best['G_right_best'] = GH.loc[max_index, 'G_right']
+            GH_best['H_left_best'] = GH.loc[max_index, 'H_left']
+            GH_best['H_right_best'] = GH.loc[max_index, 'H_right']
+        # for item in GH.index:
+        #     gain = GH.loc[item, 'G_left'] ** 2 / (GH.loc[item, 'H_left'] + self.reg_lambda) + \
+        #         GH.loc[item, 'G_right'] ** 2 / (GH.loc[item, 'H_right'] + self.reg_lambda) - \
+        #         (GH.loc[item, 'G_left'] + GH.loc[item, 'G_right']) ** 2 / (
+        #         GH.loc[item, 'H_left'] + GH.loc[item, 'H_right'] + + self.reg_lambda)
+        #     gain = gain / 2 - self.gamma
+        #     if gain > max_gain:
+        #         best_var = GH.loc[item, 'var']
+        #         best_cut = GH.loc[item, 'cut']
+        #         max_gain = gain
+        #         GH_best['G_left_best'] = GH.loc[item, 'G_left']
+        #         GH_best['G_right_best'] = GH.loc[item, 'G_right']
+        #         GH_best['H_left_best'] = GH.loc[item, 'H_left']
+        #         GH_best['H_right_best'] = GH.loc[item, 'H_right']
         return best_var, best_cut, GH_best
 
     def split(self, X, best_var, best_cut, GH_best, w):
