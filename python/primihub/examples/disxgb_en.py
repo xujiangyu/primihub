@@ -190,7 +190,7 @@ class XGB_GUEST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=100,
+                 min_child_sample=3,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -383,7 +383,7 @@ class XGB_GUEST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=100,
+                 min_child_sample=3,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -676,7 +676,7 @@ class XGB_HOST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=100,
+                 min_child_sample=3,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -996,7 +996,7 @@ class XGB_HOST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=100,
+                 min_child_sample=3,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -1536,9 +1536,9 @@ def xgb_host_logic(cry_pri="paillier"):
 
             # convert g and h to ints
             ratio = 10**3
-            gh = (gh * ratio).astype('int')
+            gh_large = (gh * ratio).astype('int')
             # gh_en = pd.DataFrame(columns=['g', 'h'])
-            flat_gh = gh.values.flatten().tolist()
+            flat_gh = gh_large.values.flatten().tolist()
             enc_flat_gh = list(
                 map(lambda x: phe_map_enc(xgb_host.pub, xgb_host.prv, x), flat_gh))
             enc_gh = np.array(enc_flat_gh).reshape((-1, 2))
