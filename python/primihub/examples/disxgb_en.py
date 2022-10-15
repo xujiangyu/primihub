@@ -1470,7 +1470,7 @@ num_tree = 2
 max_depth = 5
 
 
-@ ph.context.function(role='host', protocol='xgboost', datasets=['train_hetero_xgb_host'], port='8000', task_type="classify")
+@ ph.context.function(role='host', protocol='xgboost', datasets=['train_hetero_xgb_host'], port='8000', task_type="classification")
 def xgb_host_logic(cry_pri="paillier"):
     # def xgb_host_logic(cry_pri="plaintext"):
     start = time.time()
@@ -1706,7 +1706,7 @@ def xgb_host_logic(cry_pri="paillier"):
     proxy_server.StopRecvLoop()
 
 
-@ ph.context.function(role='guest', protocol='xgboost', datasets=['train_hetero_xgb_guest'], port='9000', task_type="classify")
+@ ph.context.function(role='guest', protocol='xgboost', datasets=['train_hetero_xgb_guest'], port='9000', task_type="classification")
 def xgb_guest_logic(cry_pri="paillier"):
     # def xgb_guest_logic(cry_pri="plaintext"):
     print("start xgb guest logic...")
