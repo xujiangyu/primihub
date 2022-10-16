@@ -191,7 +191,7 @@ class XGB_GUEST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=3,
+                 min_child_sample=100,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -384,7 +384,7 @@ class XGB_GUEST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=3,
+                 min_child_sample=100,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -677,7 +677,7 @@ class XGB_HOST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=3,
+                 min_child_sample=100,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -1014,7 +1014,7 @@ class XGB_HOST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=3,
+                 min_child_sample=100,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -1075,11 +1075,32 @@ class XGB_HOST_EN:
 
         return gh
 
-    def get_GH(self, X):
+    def get_GH(self, X, hist=True, bins=10):
         # Calculate G_left、G_right、H_left、H_right under feature segmentation
         GH = pd.DataFrame(
             columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
         i = 0
+        g = X.pop('g')
+        h = X.pop('h')
+        y = h.pop('y')
+
+        if hist:
+            if bins is not None:
+                hist_0 = X.apply(np.histogram, args=(bins,), axis=0)
+            else:
+                hist_0 = X.apply(np.histogram, axis=0)
+
+            split_points = hist_0.iloc[1]
+
+        else:
+            split_points = X.apply(np.unique, axis=0)
+
+        for item in X.columns:
+            try:
+                tmp_splits = split_points[item].values[1:]
+            except:
+                tmp_splits = split_points[item][1:]
+
         for item in [x for x in X.columns if x not in ['g', 'h', 'y']]:
             # Categorical variables using greedy algorithm
             # if len(list(set(X[item]))) < 5:
