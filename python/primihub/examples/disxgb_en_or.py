@@ -81,16 +81,16 @@ def xgb_host_logic(cry_pri="paillier"):
     logger.info("Current task type is {}.".format(eva_type))
 
     data = ph.dataset.read(dataset_key="train_hetero_xgb_host").df_data
-    columns_label_data = data.columns.tolist()
-    for index, row in data.iterrows():
-        for name in columns_label_data:
-            temp = row[name]
-            try:
-                float(temp)
-            except ValueError:
-                logger.error(
-                    "Find illegal string '{}', it's not a digit string.".format(temp))
-                return
+    # columns_label_data = data.columns.tolist()
+    # for index, row in data.iterrows():
+    #     for name in columns_label_data:
+    #         temp = row[name]
+    #         try:
+    #             float(temp)
+    #         except ValueError:
+    #             logger.error(
+    #                 "Find illegal string '{}', it's not a digit string.".format(temp))
+    #             return
 
     # Get host's ip address.
     role_node_map = ph.context.Context.get_role_node_map()
@@ -110,25 +110,27 @@ def xgb_host_logic(cry_pri="paillier"):
     server = Session(ios, ip, port, "server")
     channel = server.addChannel()
 
-    dim = data.shape[0]
-    dim_train = dim / 10 * 8
-    data_train = data.loc[:dim_train, :].reset_index(drop=True)
-    data_test = data.loc[dim_train:dim, :].reset_index(drop=True)
-    # label_true = ['Class']
-    # y_true = data_test['Class'].values
-    label_true = ['y']
-    y_true = data_test['y'].values
-    data_test = data_test[
-        [x for x in data_test.columns if x not in label_true]
-    ]
-    logger.info(data_test.head())
+    # dim = data.shape[0]
+    # dim_train = dim / 10 * 8
+    # data_train = data.loc[:dim_train, :].reset_index(drop=True)
+    # data_test = data.loc[dim_train:dim, :].reset_index(drop=True)
+    # # label_true = ['Class']
+    # # y_true = data_test['Class'].values
+    # label_true = ['y']
+    # y_true = data_test['y'].values
+    # data_test = data_test[
+    #     [x for x in data_test.columns if x not in label_true]
+    # ]
+    # logger.info(data_test.head())
 
-    labels = ['Class']  # noqa
-    X_host = data_train[
-        [x for x in data.columns if x not in labels]
-    ]
-    # Y = data_train['Class'].values
-    Y = data_train['y'].values
+    # labels = ['Class']  # noqa
+    # X_host = data_train[
+    #     [x for x in data.columns if x not in labels]
+    # ]
+    # # Y = data_train['Class'].values
+    # Y = data_train['y'].values
+    Y = data.pop('y')
+    X_host = data.copy()
 
     if cry_pri == "paillier":
         xgb_host = XGB_HOST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1, min_child_sample=100,
@@ -188,11 +190,11 @@ def xgb_host_logic(cry_pri="paillier"):
             pickle.dump(xgb_host.tree_structure, fm)
         with open(lookup_file_path, 'wb') as fl:
             pickle.dump(xgb_host.lookup_table_sum, fl)
-        y_pre = xgb_host.predict_prob(data_test)
+        y_pre = xgb_host.predict_prob(X_host)
         y_train_pre = xgb_host.predict_prob(X_host)
         y_train_pre.to_csv(predict_file_path)
         y_train_true = Y
-        Y_true = {"train": y_train_true, "test": y_true}
+        Y_true = {"train": y_train_true, "test": Y}
         Y_pre = {"train": y_train_pre, "test": y_pre}
         if eva_type == 'regression':
             Regression_eva.get_result(Y_true, Y_pre, indicator_file_path)
@@ -229,13 +231,13 @@ def xgb_host_logic(cry_pri="paillier"):
             pickle.dump(xgb_host.tree_structure, fm)
         with open(lookup_file_path, 'wb') as fl:
             pickle.dump(xgb_host.lookup_table_sum, fl)
-        y_pre = xgb_host.predict_prob(data_test)
+        y_pre = xgb_host.predict_prob(X_host)
         if eva_type == 'regression':
-            Regression_eva.get_result(y_true, y_pre, indicator_file_path)
+            Regression_eva.get_result(Y, y_pre, indicator_file_path)
         elif eva_type == 'classification':
-            Classification_eva.get_result(y_true, y_pre, indicator_file_path)
+            Classification_eva.get_result(Y, y_pre, indicator_file_path)
 
-        xgb_host.predict_prob(data_test).to_csv(predict_file_path)
+        xgb_host.predict_prob(X_host).to_csv(predict_file_path)
 
 
 @ph.context.function(role='guest', protocol='xgboost', datasets=['train_hetero_xgb_guest'], port='9000', task_type="regression")
@@ -293,10 +295,11 @@ def xgb_guest_logic(cry_pri="paillier"):
     client = Session(ios, ip, port, "client")
     channel = client.addChannel()
 
-    dim = data.shape[0]
-    dim_train = dim / 10 * 8
-    X_guest = data.loc[:dim_train, :].reset_index(drop=True)
-    data_test = data.loc[dim_train:dim, :].reset_index(drop=True)
+    # dim = data.shape[0]
+    # dim_train = dim / 10 * 8
+    # X_guest = data.loc[:dim_train, :].reset_index(drop=True)
+    # data_test = data.loc[dim_train:dim, :].reset_index(drop=True)
+    X_guest = data.copy()
 
     if cry_pri == "paillier":
         xgb_guest = XGB_GUEST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1, min_child_weight=1, min_child_sample=100,
@@ -322,7 +325,7 @@ def xgb_guest_logic(cry_pri="paillier"):
 
         with open(lookup_file_path, 'wb') as fl:
             pickle.dump(xgb_guest.lookup_table_sum, fl)
-        xgb_guest.predict(data_test)
+        xgb_guest.predict(X_guest)
         xgb_guest.predict(X_guest)
     elif cry_pri == "plaintext":
         xgb_guest = XGB_GUEST(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1, min_child_weight=1, min_child_sample=100,
@@ -345,5 +348,5 @@ def xgb_guest_logic(cry_pri="paillier"):
 
         with open(lookup_file_path, 'wb') as fl:
             pickle.dump(xgb_guest.lookup_table_sum, fl)
-        xgb_guest.predict(data_test)
+        xgb_guest.predict(X_guest)
         xgb_guest.predict(X_guest)
