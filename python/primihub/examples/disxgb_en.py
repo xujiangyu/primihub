@@ -1080,31 +1080,34 @@ class XGB_HOST_EN:
         GH = pd.DataFrame(
             columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
         i = 0
-        # g = X.pop('g')
-        # h = X.pop('h')
+        g = X.pop('g')
+        h = X.pop('h')
         # y = h.pop('y')
 
-        # if hist:
-        #     if bins is not None:
-        #         hist_0 = X.apply(np.histogram, args=(bins,), axis=0)
-        #     else:
-        #         hist_0 = X.apply(np.histogram, axis=0)
+        if hist:
+            if bins is not None:
+                hist_0 = X.apply(np.histogram, args=(bins,), axis=0)
+            else:
+                hist_0 = X.apply(np.histogram, axis=0)
 
-        #     split_points = hist_0.iloc[1]
+            split_points = hist_0.iloc[1]
 
-        # else:
-        #     split_points = X.apply(np.unique, axis=0)
+        else:
+            split_points = X.apply(np.unique, axis=0)
 
         # for item in X.columns:
         #     try:
         #         tmp_splits = split_points[item].values[1:]
         #     except:
         #         tmp_splits = split_points[item][1:]
+        G_lefts = []
+        G_rights = []
 
         for item in [x for x in X.columns if x not in ['g', 'h', 'y']]:
             # Categorical variables using greedy algorithm
             # if len(list(set(X[item]))) < 5:
-            for cuts in list(set(X[item])):
+            # for cuts in list(set(X[item])):
+            for cuts in split_points:
                 if self.min_child_sample:
                     if (X.loc[X[item] < cuts].shape[0] < self.min_child_sample) \
                             | (X.loc[X[item] >= cuts].shape[0] < self.min_child_sample):
@@ -1713,7 +1716,7 @@ def xgb_host_logic(cry_pri="paillier"):
 
         # xgb_host.predict_prob(X_host).to_csv(predict_file_path)
     train_pred = xgb_host.predict(X_host)
-    train_acc = metrics.accuracy_score(train_pred, Y.values)
+    train_acc = metrics.accuracy_score(train_pred, Y)
 
     # validate for test
     test_host = ph.dataset.read(dataset_key='test_hetero_xgb_host').df_data
