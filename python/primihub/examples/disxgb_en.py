@@ -1486,7 +1486,7 @@ ph.context.Context.func_params_map = {
 }
 
 # Number of tree to fit.
-num_tree = 2
+num_tree = 1
 # Max depth of each tree.
 max_depth = 5
 
