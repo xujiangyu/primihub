@@ -1561,7 +1561,7 @@ def xgb_host_logic(cry_pri="paillier"):
     # public_k, priv_k = paillier.generate_paillier_keypair()
     # logger.debug("paillier pub key is : {}".format(public_k))
     # print("paillier pub key is :", public_k)
-    host_log = open('/app/host_log', 'w+')
+    # host_log = open('/app/host_log', 'w+')
 
     if cry_pri == "paillier":
         xgb_host = XGB_HOST_EN(n_estimators=num_tree, max_depth=max_depth, reg_lambda=1,
@@ -1601,7 +1601,8 @@ def xgb_host_logic(cry_pri="paillier"):
             #         gh_en.loc[index, item] = opt_paillier_encrypt_crt(xgb_host.pub, xgb_host.prv,
             #                                                           int(gh.loc[index, item]))
             print("Encrypt finish.")
-            print(f"gh_en: {gh_en}", file=host_log)
+            print(f"gh_en: {gh_en}")
+            gh_en.to_csv('/app/host_log.csv', sep='\t')
 
             proxy_client_guest.Remote(gh_en, "gh_en")
 
@@ -1729,7 +1730,7 @@ def xgb_host_logic(cry_pri="paillier"):
     print("train and test validate acc: ", {
         'train_acc': train_acc, 'test_acc': test_acc})
     proxy_server.StopRecvLoop()
-    host_log.close()
+    # host_log.close()
 
 
 @ ph.context.function(role='guest', protocol='xgboost', datasets=['train_hetero_xgb_guest'], port='9000', task_type="classification")
@@ -1812,6 +1813,7 @@ def xgb_guest_logic(cry_pri="paillier"):
             gh_sum = xgb_guest.get_GH(X_guest_gh, pub)
             # xgb_guest.channel.send(gh_sum)
             print(f"gh_sum {gh_sum}: ", file=guest_log)
+            gh_sum.to_csv('/app/guest_log.csv', sep='\t')
             proxy_client_host.Remote(gh_sum, "gh_sum")
             xgb_guest.cart_tree(X_guest_gh, 0, pub)
             xgb_guest.lookup_table_sum[t + 1] = xgb_guest.lookup_table
