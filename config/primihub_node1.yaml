@@ -53,7 +53,13 @@ datasets:
     model: "csv"
     source: "/tmp/FL/hetero_xgb/test/test_breast_cancer_host.csv"
 
+  - description: "data_to_std"
+    model: "csv"
+    source: "/tmp/FL/feature_engineer/data_to_std.csv"
 
+  - description: "data_with_null"
+    model: "csv"
+    source: "/tmp/FL/feature_engineer/data_with_null.csv"
 
 localkv: 
   model: "leveldb"
