@@ -24,8 +24,11 @@ def run_infer():
 
     standard_data_df = pd.DataFrame(standard_data, columns=data.columns)
 
-    if not os.path.exists(predict_file_path):
-        os.makedirs(predict_file_path)
+
+    dir_name = os.path.dirname(predict_file_path)
+
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
 
     # standard_data_df.to_csv("/app/standard_data.csv", sep='\t')
     standard_data_df.to_csv(predict_file_path, sep='\t')

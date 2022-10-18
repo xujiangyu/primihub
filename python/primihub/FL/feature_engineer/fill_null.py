@@ -18,9 +18,10 @@ def process_na():
 
     data.fillna(data.median(), inplace=True)
 
-    # data.to_csv("/app/na_rep_mean.csv", sep='\t')
-    if not os.path.exists(predict_file_path):
-        os.makedirs(predict_file_path)
+    dir_name = os.path.dirname(predict_file_path)
+
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
 
     data.to_csv(predict_file_path, sep='\t')
 
