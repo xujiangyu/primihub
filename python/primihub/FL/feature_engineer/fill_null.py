@@ -4,7 +4,7 @@ import logging
 
 
 @ph.context.function(role='guest', protocol='fill_na', datasets=['data_with_null'], port='9020', task_type="ProcessNAs")
-def run_infer():
+def process_na():
 
     logging("Start processing data with nas.")
 
