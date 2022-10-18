@@ -2,6 +2,7 @@ import primihub as ph
 from primihub import dataset
 import logging
 import pandas as pd
+import os
 from sklearn.preprocessing import StandardScaler
 
 
@@ -9,6 +10,8 @@ from sklearn.preprocessing import StandardScaler
 def run_infer():
 
     logging("Start processing data.")
+    predict_file_path = ph.context.Context.get_predict_file_path()
+
     stand_scale = StandardScaler()
 
     dataset_map = ph.context.Context.dataset_map
@@ -20,6 +23,11 @@ def run_infer():
     standard_data = stand_scale.fit_transform(data)
 
     standard_data_df = pd.DataFrame(standard_data, columns=data.columns)
-    standard_data_df.to_csv("/app/standard_data.csv", sep='\t')
+
+    if not os.path.exists(predict_file_path):
+        os.makedirs(predict_file_path)
+
+    # standard_data_df.to_csv("/app/standard_data.csv", sep='\t')
+    standard_data_df.to_csv(predict_file_path, sep='\t')
 
     logging("Ending processing data.")
