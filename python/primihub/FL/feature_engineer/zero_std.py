@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 @ph.context.function(role='guest', protocol='Standariz', datasets=['data_to_std'], port='9020', task_type="Standardation")
 def run_infer():
 
-    logging("Start processing data.")
+    logging.info("Start processing data.")
     predict_file_path = ph.context.Context.get_predict_file_path()
 
     stand_scale = StandardScaler()
@@ -30,4 +30,4 @@ def run_infer():
     # standard_data_df.to_csv("/app/standard_data.csv", sep='\t')
     standard_data_df.to_csv(predict_file_path, sep='\t')
 
-    logging("Ending processing data.")
+    logging.info("Ending processing data.")

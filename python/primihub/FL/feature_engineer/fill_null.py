@@ -7,7 +7,7 @@ import os
 @ph.context.function(role='guest', protocol='fill_na', datasets=['data_with_null'], port='9020', task_type="ProcessNAs")
 def process_na():
 
-    logging("Start processing data with nas.")
+    logging.info("Start processing data with nas.")
     predict_file_path = ph.context.Context.get_predict_file_path()
 
     dataset_map = ph.context.Context.dataset_map
@@ -24,4 +24,4 @@ def process_na():
 
     data.to_csv(predict_file_path, sep='\t')
 
-    logging("Ending processing data with nas.")
+    logging.info("Ending processing data with nas.")
