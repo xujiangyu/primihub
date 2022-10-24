@@ -44,6 +44,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from primihub.channel.zmq_channel import IOService, Session
 import functools
+import ray
 
 
 LOG_FORMAT = "[%(asctime)s][%(filename)s:%(lineno)d][%(levelname)s] %(message)s"
@@ -412,6 +413,10 @@ class XGB_GUEST_EN:
         self.lookup_table_sum = {}
 
     def get_GH(self, X, pub):
+
+        @ray.remote
+        def ray_sum_enc(*items):
+            return
         # global
         # def opt_pai_add(x, y):
         #     return opt_paillier_add(pub, x, y)
@@ -1572,6 +1577,7 @@ def xgb_host_logic(cry_pri="paillier"):
         # proxy_client_guest.Remote(public_k, "xgb_pub")
         # print(xgb_host.channel.recv())
         y_hat = np.array([0.5] * Y.shape[0])
+        ray.init()
 
         for t in range(xgb_host.n_estimators):
             print("Begin to trian tree: ", t + 1)
@@ -1587,9 +1593,12 @@ def xgb_host_logic(cry_pri="paillier"):
             gh_large = (gh * ratio).astype('int')
             # gh_en = pd.DataFrame(columns=['g', 'h'])
             flat_gh = gh_large.values.flatten().tolist()
-            enc_flat_gh = list(
-                map(lambda x: phe_map_enc(xgb_host.pub, xgb_host.prv, x), flat_gh))
-            enc_gh = np.array(enc_flat_gh).reshape((-1, 2))
+            rds_flag_gh = ray.data.from_items(flat_gh)
+            rds_flag_gh_enc = rds_flag_gh.map(
+                lambda x: phe_map_enc(xgb_host.pub, xgb_host.prv, x)).to_pandas().values.flatten()
+            # enc_flat_gh = list(
+            #     map(lambda x: phe_map_enc(xgb_host.pub, xgb_host.prv, x), flat_gh))
+            enc_gh = np.array(rds_flag_gh_enc).reshape((-1, 2))
             enc_gh_df = pd.DataFrame(enc_gh, columns=['g', 'h'])
 
             # gh.apply(opt_paillier_encrypt_crt,
@@ -1614,8 +1623,11 @@ def xgb_host_logic(cry_pri="paillier"):
             tmp_shape = GH_guest_en.shape
             tmp_columns = GH_guest_en.columns
             GH_guest_en_li = GH_guest_en.values.flatten().tolist()
-            GH_guest_dec_li = list(map(
-                lambda x: phe_map_dec(xgb_host.pub, xgb_host.prv, x), GH_guest_en_li))
+            rd_GH_guest_en_li = ray.data.from_items(GH_guest_en_li)
+            GH_guest_dec_li = rd_GH_guest_en_li.map(
+                lambda x: phe_map_dec(xgb_host.pub, xgb_host.prv, x)).to_pandas().values.flatten()
+            # GH_guest_dec_li = list(map(
+            #     lambda x: phe_map_dec(xgb_host.pub, xgb_host.prv, x), GH_guest_en_li))
             # GH_guest = GH_guest_en.apply(
             #     opt_paillier_decrypt_crt, args=(xgb_host.pub, xgb_host.prv))
             GH_guest_dec = np.array(GH_guest_dec_li).reshape(tmp_shape)
