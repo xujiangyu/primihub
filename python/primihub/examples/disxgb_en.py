@@ -56,13 +56,13 @@ logger = logging.getLogger("proxy")
 
 
 @ray.remote
-class PaillierActor:
+class PaillierActor(object):
     def __init__(self, prv, pub) -> None:
         self.prv = prv
         self.pub = pub
 
     def pai_enc(self, item):
-        return opt_paillier_encrypt_crt(self.pub, self.pri, item)
+        return opt_paillier_encrypt_crt(self.pub, self.prv, item)
 
     def pai_dec(self, item):
         return opt_paillier_decrypt_crt(self.pub, self.prv, item)
@@ -1595,8 +1595,10 @@ def xgb_host_logic(cry_pri="paillier"):
         # print(xgb_host.channel.recv())
         y_hat = np.array([0.5] * Y.shape[0])
         # ray.init()
-        pai_actor = PaillierActor(xgb_host.prv, xgb_host.pub)
-        actor1, actor2 = pai_actor.remote(), pai_actor.remote()
+        # pai_actor = PaillierActor(xgb_host.prv, xgb_host.pub)
+        actor1, actor2 = PaillierActor.remote(xgb_host.prv, xgb_host.pub
+                                              ), PaillierActor.remote(xgb_host.prv, xgb_host.pub
+                                                                      )
         pools = ActorPool([actor1, actor2])
 
         for t in range(xgb_host.n_estimators):
