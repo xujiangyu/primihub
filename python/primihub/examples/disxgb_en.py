@@ -45,6 +45,7 @@ from concurrent.futures import ThreadPoolExecutor
 from primihub.channel.zmq_channel import IOService, Session
 import functools
 import ray
+from ray.util import ActorPool
 
 
 LOG_FORMAT = "[%(asctime)s][%(filename)s:%(lineno)d][%(levelname)s] %(message)s"
@@ -52,6 +53,22 @@ DATE_FORMAT = "%m/%d/%Y %H:%M:%S %p"
 logging.basicConfig(level=logging.DEBUG,
                     format=LOG_FORMAT, datefmt=DATE_FORMAT)
 logger = logging.getLogger("proxy")
+
+
+@ray.remote
+class PaillierActor:
+    def __init__(self, prv, pub) -> None:
+        self.prv = prv
+        self.pub = pub
+
+    def pai_enc(self, item):
+        return opt_paillier_encrypt_crt(self.pub, self.pri, item)
+
+    def pai_dec(self, item):
+        return opt_paillier_decrypt_crt(self.pub, self.prv, item)
+
+    # def double(self, n):
+    #     return n * 2
 
 
 def phe_map_enc(pub, pri, item):
@@ -1577,7 +1594,10 @@ def xgb_host_logic(cry_pri="paillier"):
         # proxy_client_guest.Remote(public_k, "xgb_pub")
         # print(xgb_host.channel.recv())
         y_hat = np.array([0.5] * Y.shape[0])
-        ray.init()
+        # ray.init()
+        pai_actor = PaillierActor(xgb_host.prv, xgb_host.pub)
+        actor1, actor2 = pai_actor.remote(), pai_actor.remote()
+        pools = ActorPool([actor1, actor2])
 
         for t in range(xgb_host.n_estimators):
             print("Begin to trian tree: ", t + 1)
@@ -1593,12 +1613,15 @@ def xgb_host_logic(cry_pri="paillier"):
             gh_large = (gh * ratio).astype('int')
             # gh_en = pd.DataFrame(columns=['g', 'h'])
             flat_gh = gh_large.values.flatten().tolist()
-            rds_flag_gh = ray.data.from_items(flat_gh)
-            rds_flag_gh_enc = rds_flag_gh.map(
-                lambda x: phe_map_enc(xgb_host.pub, xgb_host.prv, x)).to_pandas().values.flatten()
+            enc_flat_gh = list(
+                pools.map(lambda a, v: a.pai_enc.remote(v), flat_gh))
+
+            # rds_flag_gh = ray.data.from_items(flat_gh)
+            # rds_flag_gh_enc = rds_flag_gh.map(
+            #     lambda x: phe_map_enc(xgb_host.pub, xgb_host.prv, x)).to_pandas().values.flatten()
             # enc_flat_gh = list(
             #     map(lambda x: phe_map_enc(xgb_host.pub, xgb_host.prv, x), flat_gh))
-            enc_gh = np.array(rds_flag_gh_enc).reshape((-1, 2))
+            enc_gh = np.array(enc_flat_gh).reshape((-1, 2))
             enc_gh_df = pd.DataFrame(enc_gh, columns=['g', 'h'])
 
             # gh.apply(opt_paillier_encrypt_crt,
@@ -1623,9 +1646,13 @@ def xgb_host_logic(cry_pri="paillier"):
             tmp_shape = GH_guest_en.shape
             tmp_columns = GH_guest_en.columns
             GH_guest_en_li = GH_guest_en.values.flatten().tolist()
-            rd_GH_guest_en_li = ray.data.from_items(GH_guest_en_li)
-            GH_guest_dec_li = rd_GH_guest_en_li.map(
-                lambda x: phe_map_dec(xgb_host.pub, xgb_host.prv, x)).to_pandas().values.flatten()
+
+            GH_guest_dec_li = list(
+                pools.map(lambda a, v: a.pai_dec.remote(v), GH_guest_en_li))
+
+            # rd_GH_guest_en_li = ray.data.from_items(GH_guest_en_li)
+            # GH_guest_dec_li = rd_GH_guest_en_li.map(
+            #     lambda x: phe_map_dec(xgb_host.pub, xgb_host.prv, x)).to_pandas().values.flatten()
             # GH_guest_dec_li = list(map(
             #     lambda x: phe_map_dec(xgb_host.pub, xgb_host.prv, x), GH_guest_en_li))
             # GH_guest = GH_guest_en.apply(
