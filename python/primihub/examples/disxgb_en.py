@@ -67,6 +67,9 @@ class PaillierActor(object):
     def pai_dec(self, item):
         return opt_paillier_decrypt_crt(self.pub, self.prv, item)
 
+    def pai_add(self, enc1, enc2):
+        return opt_paillier_add(self.pub, enc1, enc2)
+
     # def double(self, n):
     #     return n * 2
 
@@ -431,9 +434,9 @@ class XGB_GUEST_EN:
 
     def get_GH(self, X, pub):
 
-        @ray.remote
-        def ray_sum_enc(*items):
-            return
+        actor1, actor2 = PaillierActor.remote(None, pub
+                                              ), PaillierActor.remote(None, pub
+                                                                      )
         # global
         # def opt_pai_add(x, y):
         #     return opt_paillier_add(pub, x, y)
@@ -475,6 +478,7 @@ class XGB_GUEST_EN:
 
                 # tmp_g_left = functools.reduce(opt_pai_add, G_left_g)
                 # opt_paillier_add(pub, x, y)
+
                 tmp_g_left = functools.reduce(
                     lambda x, y: opt_paillier_add(pub, x, y), G_left_g)
                 tmp_g_right = functools.reduce(
