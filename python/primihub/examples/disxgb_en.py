@@ -1,20 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
- Copyright 2022 Primihub
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-      https://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- """
 import primihub as ph
 from primihub import dataset, context
 from phe import paillier
@@ -1121,11 +1104,11 @@ class XGB_HOST_EN:
         else:
             split_points = X.apply(np.unique, axis=0)
 
-        # for item in X.columns:
-        #     try:
-        #         tmp_splits = split_points[item].values[1:]
-        #     except:
-        #         tmp_splits = split_points[item][1:]
+        for item in X.columns:
+            try:
+                tmp_splits = split_points[item].values[1:]
+            except:
+                tmp_splits = split_points[item][1:]
         G_lefts = []
         G_rights = []
 
@@ -1133,7 +1116,8 @@ class XGB_HOST_EN:
             # Categorical variables using greedy algorithm
             # if len(list(set(X[item]))) < 5:
             # for cuts in list(set(X[item])):
-            for cuts in split_points:
+            # for cuts in split_points[item]:
+            for cuts in tmp_splits:
                 if self.min_child_sample:
                     if (X.loc[X[item] < cuts].shape[0] < self.min_child_sample) \
                             | (X.loc[X[item] >= cuts].shape[0] < self.min_child_sample):
