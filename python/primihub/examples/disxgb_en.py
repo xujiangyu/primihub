@@ -1386,13 +1386,13 @@ class XGB_HOST_EN:
                 gh_sum_right_en = id_w_gh['gh_sum_right']
                 vars = gh_sum_right_en.pop('var')
                 cuts = gh_sum_right_en.pop('cut')
-                gh_sum_right_en_li = gh_sum_right_en.values.tolist()
+                right_m, right_n = gh_sum_right_en.shape
+                gh_sum_right_en_li = gh_sum_right_en.values.flatten.tolist()
                 # print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
 
-                gh_sum_right_dec_li = list(map(
-                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))
-                gh_sum_right = pd.DataFrame(
-                    {'gh_sum_right': gh_sum_right_dec_li})
+                gh_sum_right_dec_li = np.array(list(map(
+                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))).reshape((right_m,-1))
+                gh_sum_right = pd.DataFrame(gh_sum_right_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
                 # gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
                 #                                      args=(self.pub,
                 #                                            self.prv))
@@ -1412,17 +1412,18 @@ class XGB_HOST_EN:
                 #         gh_sum_right.loc[index,
                 #                          item] = gh_sum_right_en.loc[index, item]
                 gh_sum_left_en = id_w_gh['gh_sum_left']
-                vars1 = gh_sum_left_en['var']
-                cuts1 = gh_sum_left_en['cut']
+                vars1 = gh_sum_left_en.pop(['var'])
+                cuts1 = gh_sum_left_en.pop(['cut'])
+                left_m, left_n = gh_sum_left_en.shape
 
-                gh_sum_left_en_li = gh_sum_left_en.values.tolist()
+                gh_sum_left_en_li = gh_sum_left_en.values.flatten().tolist()
                 # print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
 
 
-                gh_sum_left_dec_li = list(map(
-                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))
+                gh_sum_left_dec_li = np.array(list(map(
+                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))).reshape((left_m, -1))
 
-                gh_sum_left = pd.DataFrame({'gh_sum_left': gh_sum_left_dec_li})
+                gh_sum_left = pd.DataFrame(gh_sum_left_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
 
                 # gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
                 #                                    args=(self.pub,
@@ -1465,14 +1466,14 @@ class XGB_HOST_EN:
 
                 vars = gh_sum_right_en.pop('var')
                 cuts = gh_sum_right_en.pop('cut')
-                gh_sum_right_en_li = gh_sum_right_en.values.tolist()
+                right_m, right_n = gh_sum_right_en.shape
+                gh_sum_right_en_li = gh_sum_right_en.values.flatten().tolist()
                 # print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
                 
 
-                gh_sum_right_dec_li = list(map(
-                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))
-                gh_sum_right = pd.DataFrame(
-                    {'gh_sum_right': gh_sum_right_dec_li})
+                gh_sum_right_dec_li = np.array(list(map(
+                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))).reshape((right_m,-1))
+                gh_sum_right = pd.DataFrame(gh_sum_right_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
                 # gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
                 #                                      args=(self.pub,
                 #                                            self.prv))
@@ -1492,16 +1493,19 @@ class XGB_HOST_EN:
                 #         gh_sum_right.loc[index,
                 #                          item] = gh_sum_right_en.loc[index, item]
                 gh_sum_left_en = gh_sum_dic['gh_sum_left']
+                vars1 = gh_sum_left_en.pop(['var'])
+                cuts1 = gh_sum_left_en.pop(['cut'])
+                left_m, left_n = gh_sum_left_en.shape
 
-                vars1 = gh_sum_left_en['var']
-                cuts1 = gh_sum_left_en['cut']
-                gh_sum_left_en_li = gh_sum_left_en.values.tolist()
+                gh_sum_left_en_li = gh_sum_left_en.values.flatten().tolist()
                 # print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
 
-                gh_sum_left_dec_li = list(map(
-                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))
-                gh_sum_left = pd.DataFrame(
-                    {'gh_sum_left': gh_sum_left_dec_li})
+
+                gh_sum_left_dec_li = np.array(list(map(
+                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))).reshape((left_m, -1))
+
+                gh_sum_left = pd.DataFrame(gh_sum_left_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
+
                 # gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
                 #                                    args=(self.pub,
                 #                                          self.prv))
