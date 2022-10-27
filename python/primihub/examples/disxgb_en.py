@@ -322,7 +322,7 @@ class XGB_GUEST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=100,
+                 min_child_sample=5,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -515,7 +515,7 @@ class XGB_GUEST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=100,
+                 min_child_sample=5,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -827,7 +827,7 @@ class XGB_HOST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=100,
+                 min_child_sample=5,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -1164,7 +1164,7 @@ class XGB_HOST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=100,
+                 min_child_sample=5,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -1795,22 +1795,6 @@ def xgb_host_logic(cry_pri="paillier"):
             GH_guest = pd.concat([GH_guest, vars, cuts], axis=1)
             print("GH_guest: ", GH_guest)
 
-            # GH_guest = pd.DataFrame(
-            #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
-            # for item in [x for x in GH_guest_en.columns if x not in ['cut', 'var']]:
-            #     for index in GH_guest_en.index:
-            #         if GH_guest_en.loc[index, item] == 0:
-            #             GH_guest.loc[index, item] = 0
-            #         else:
-            #             GH_guest.loc[index, item] = opt_paillier_decrypt_crt(xgb_host.pub, xgb_host.prv,
-            #                                                                  GH_guest_en.loc[index, item])
-
-            # logger.info("Decrypt finish.")
-
-            # for item in [x for x in GH_guest_en.columns if x not in ['G_left', 'G_right', 'H_left', 'H_right']]:
-            #     for index in GH_guest_en.index:
-            #         GH_guest.loc[index, item] = GH_guest_en.loc[index, item]
-
             xgb_host.tree_structure[t + 1], f_t = xgb_host.xgb_tree(X_host, GH_guest, gh, f_t, 0)  # noqa
             xgb_host.lookup_table_sum[t + 1] = xgb_host.lookup_table
             y_hat = y_hat + xgb_host.learning_rate * f_t
@@ -1826,10 +1810,10 @@ def xgb_host_logic(cry_pri="paillier"):
         model_file_path = ph.context.Context.get_model_file_path()
         lookup_file_path = ph.context.Context.get_host_lookup_file_path()
 
-        with open(model_file_path, 'wb') as fm:
-            pickle.dump(xgb_host.tree_structure, fm)
-        with open(lookup_file_path, 'wb') as fl:
-            pickle.dump(xgb_host.lookup_table_sum, fl)
+        # with open(model_file_path, 'wb') as fm:
+        #     pickle.dump(xgb_host.tree_structure, fm)
+        # with open(lookup_file_path, 'wb') as fl:
+        #     pickle.dump(xgb_host.lookup_table_sum, fl)
 
         # y_pre = xgb_host.predict_prob(X_host)
         # y_train_pre.to_csv(predict_file_path)
