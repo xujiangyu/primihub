@@ -1387,17 +1387,20 @@ class XGB_HOST_EN:
                 vars = gh_sum_right_en.pop('var')
                 cuts = gh_sum_right_en.pop('cut')
                 right_m, right_n = gh_sum_right_en.shape
-                gh_sum_right_en_li = gh_sum_right_en.values.flatten().tolist()
-                # print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
+                if right_m > 0:
+                    gh_sum_right_en_li = gh_sum_right_en.values.flatten().tolist()
+                    # print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
 
-                gh_sum_right_dec_li = np.array(list(map(
-                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))).reshape((right_m,-1))
-                gh_sum_right = pd.DataFrame(gh_sum_right_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
-                # gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
-                #                                      args=(self.pub,
-                #                                            self.prv))
-                gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
-
+                    gh_sum_right_dec_li = np.array(list(map(
+                        lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))).reshape((right_m,-1))
+                    gh_sum_right = pd.DataFrame(gh_sum_right_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
+                    # gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
+                    #                                      args=(self.pub,
+                    #                                            self.prv))
+                    gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
+                
+                else:
+                    gh_sum_right = pd.DataFrame()
                 # gh_sum_right = pd.DataFrame(
                 #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
                 # for item in [x for x in gh_sum_right_en.columns if x not in ['cut', 'var']]:
@@ -1415,21 +1418,23 @@ class XGB_HOST_EN:
                 vars1 = gh_sum_left_en.pop(['var'])
                 cuts1 = gh_sum_left_en.pop(['cut'])
                 left_m, left_n = gh_sum_left_en.shape
+                if left_m > 0:
+                    gh_sum_left_en_li = gh_sum_left_en.values.flatten().tolist()
+                    # print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
 
-                gh_sum_left_en_li = gh_sum_left_en.values.flatten().tolist()
-                # print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
 
+                    gh_sum_left_dec_li = np.array(list(map(
+                        lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))).reshape((left_m, -1))
 
-                gh_sum_left_dec_li = np.array(list(map(
-                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))).reshape((left_m, -1))
+                    gh_sum_left = pd.DataFrame(gh_sum_left_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
 
-                gh_sum_left = pd.DataFrame(gh_sum_left_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
+                    # gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
+                    #                                    args=(self.pub,
+                    #                                          self.prv))
 
-                # gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
-                #                                    args=(self.pub,
-                #                                          self.prv))
-
-                gh_sum_left = pd.concat([gh_sum_left, vars1, cuts1], axis=1)
+                    gh_sum_left = pd.concat([gh_sum_left, vars1, cuts1], axis=1)
+                else:
+                    gh_sum_left = pd.DataFrame()
                 # gh_sum_left = pd.DataFrame(
                 #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
                 # for item in [x for x in gh_sum_left_en.columns if x not in ['cut', 'var']]:
@@ -1467,17 +1472,20 @@ class XGB_HOST_EN:
                 vars = gh_sum_right_en.pop('var')
                 cuts = gh_sum_right_en.pop('cut')
                 right_m, right_n = gh_sum_right_en.shape
-                gh_sum_right_en_li = gh_sum_right_en.values.flatten().tolist()
-                # print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
-                
+                if right_m > 0:
+                    gh_sum_right_en_li = gh_sum_right_en.values.flatten().tolist()
+                    # print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
+                    
 
-                gh_sum_right_dec_li = np.array(list(map(
-                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))).reshape((right_m,-1))
-                gh_sum_right = pd.DataFrame(gh_sum_right_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
-                # gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
-                #                                      args=(self.pub,
-                #                                            self.prv))
-                gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
+                    gh_sum_right_dec_li = np.array(list(map(
+                        lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))).reshape((right_m,-1))
+                    gh_sum_right = pd.DataFrame(gh_sum_right_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
+                    # gh_sum_right = gh_sum_right_en.apply(opt_paillier_decrypt_crt,
+                    #                                      args=(self.pub,
+                    #                                            self.prv))
+                    gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
+                else:
+                    gh_sum_right = pd.DataFrame()
 
 
                 # gh_sum_right = pd.DataFrame(
@@ -1497,21 +1505,24 @@ class XGB_HOST_EN:
                 vars1 = gh_sum_left_en.pop(['var'])
                 cuts1 = gh_sum_left_en.pop(['cut'])
                 left_m, left_n = gh_sum_left_en.shape
+                if left_m > 0:
 
-                gh_sum_left_en_li = gh_sum_left_en.values.flatten().tolist()
-                # print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
+                    gh_sum_left_en_li = gh_sum_left_en.values.flatten().tolist()
+                    # print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
 
 
-                gh_sum_left_dec_li = np.array(list(map(
-                    lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))).reshape((left_m, -1))
+                    gh_sum_left_dec_li = np.array(list(map(
+                        lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))).reshape((left_m, -1))
 
-                gh_sum_left = pd.DataFrame(gh_sum_left_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
+                    gh_sum_left = pd.DataFrame(gh_sum_left_dec_li, columns=['G_left', 'G_right', 'H_left', 'H_right'])
 
-                # gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
-                #                                    args=(self.pub,
-                #                                          self.prv))
+                    # gh_sum_left = gh_sum_left_en.apply(opt_paillier_decrypt_crt,
+                    #                                    args=(self.pub,
+                    #                                          self.prv))
 
-                gh_sum_left = pd.concat([gh_sum_left, vars1, cuts1], axis=1)
+                    gh_sum_left = pd.concat([gh_sum_left, vars1, cuts1], axis=1)
+                else:
+                    gh_sum_left = pd.DataFrame()
                 # gh_sum_left = pd.DataFrame(
                 #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
                 # for item in [x for x in gh_sum_left_en.columns if x not in ['cut', 'var']]:
