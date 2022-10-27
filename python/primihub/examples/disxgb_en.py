@@ -190,6 +190,8 @@ def phe_map_enc(pub, pri, item):
 
 
 def phe_map_dec(pub, prv, item):
+    if not item:
+        return
     # return pri.decrypt(item)
     return opt_paillier_decrypt_crt(pub, prv, item)
 
@@ -1328,8 +1330,10 @@ class XGB_HOST_EN:
         return w, id_right, id_left, w_right, w_left
 
     def xgb_tree(self, X_host, GH_guest, gh, f_t, m_dpth):
+        m, _ = X_host.shape
+        
         print("=====host mdep===", m_dpth)
-        if m_dpth > self.max_depth:
+        if m_dpth > self.max_depth or m <=1:
             return
         X_host = X_host
         gh = gh
