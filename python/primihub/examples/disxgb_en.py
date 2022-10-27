@@ -1352,7 +1352,7 @@ class XGB_HOST_EN:
         GH_host = self.get_GH(X_host_gh)
 
         best_var, best_cut, GH_best = self.find_split(GH_host, GH_guest)
-        print("best_var: ", best_var)
+        print("best_var: ", best_var, X_host)
         if best_var is None:
             best_var = "True"
 
@@ -1418,8 +1418,8 @@ class XGB_HOST_EN:
                 gh_sum_left_en = id_w_gh['gh_sum_left']
                 left_m, _ = gh_sum_left_en.shape
                 if left_m > 0:
-                    vars1 = gh_sum_left_en.pop(['var'])
-                    cuts1 = gh_sum_left_en.pop(['cut'])
+                    vars1 = gh_sum_left_en.pop('var')
+                    cuts1 = gh_sum_left_en.pop('cut')
                     gh_sum_left_en_li = gh_sum_left_en.values.flatten().tolist()
                     # print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
 
@@ -1505,8 +1505,8 @@ class XGB_HOST_EN:
 
                 left_m, _ = gh_sum_left_en.shape
                 if left_m > 0:
-                    vars1 = gh_sum_left_en.pop(['var'])
-                    cuts1 = gh_sum_left_en.pop(['cut'])
+                    vars1 = gh_sum_left_en.pop('var')
+                    cuts1 = gh_sum_left_en.pop('cut')
                     gh_sum_left_en_li = gh_sum_left_en.values.flatten().tolist()
                     # print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
 
