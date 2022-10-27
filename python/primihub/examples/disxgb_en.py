@@ -66,6 +66,16 @@ class PaillierActor(object):
 
     # def double(self, n):
     #     return n * 2
+@ray.remote
+class PallierAdd(object):
+    def __init__(self, pub):
+        self.pub = pub
+    
+    def pai_add(self, items):
+        pai_sum = functools.reduce(
+                lambda x, y: opt_paillier_add(self.pub, x, y), items)
+        
+        return pai_sum
 
 
 @ray.remote
@@ -94,6 +104,7 @@ class MapGH(object):
         H_rights = []
         vars = []
         cuts = []
+        actor_pools = ActorPool([PallierAdd.remote(self.pub), PallierAdd.remote(self.pub), PallierAdd.remote(self.pub), PallierAdd.remote(self.pub)])
 
         col_sets = np.unique(self.col)
         col_bins = np.histogram(self.col, bins=bins)
@@ -121,15 +132,18 @@ class MapGH(object):
             H_right_h = self.h[(1-flag).astype('bool')].tolist()
             print("++++++++++", len(G_left_g), len(G_right_g),
                   len(H_left_h), len(H_right_h))
+            
+            tmp_g_left, tmp_g_right, tmp_h_left,tmp_h_right  = list(
+                actor_pools.map(lambda a, v: a.pai_add.remote(v), [G_left_g, G_right_g, H_left_h, H_right_h]))
 
-            tmp_g_left = functools.reduce(
-                lambda x, y: opt_paillier_add(self.pub, x, y), G_left_g)
-            tmp_g_right = functools.reduce(
-                lambda x, y: opt_paillier_add(self.pub, x, y), G_right_g)
-            tmp_h_left = functools.reduce(
-                lambda x, y: opt_paillier_add(self.pub, x, y), H_left_h)
-            tmp_h_right = functools.reduce(
-                lambda x, y: opt_paillier_add(self.pub, x, y), H_right_h)
+            # tmp_g_left = functools.reduce(
+            #     lambda x, y: opt_paillier_add(self.pub, x, y), G_left_g)
+            # tmp_g_right = functools.reduce(
+            #     lambda x, y: opt_paillier_add(self.pub, x, y), G_right_g)
+            # tmp_h_left = functools.reduce(
+            #     lambda x, y: opt_paillier_add(self.pub, x, y), H_left_h)
+            # tmp_h_right = functools.reduce(
+            #     lambda x, y: opt_paillier_add(self.pub, x, y), H_right_h)
 
             G_lefts.append(tmp_g_left)
             G_rights.append(tmp_g_right)
