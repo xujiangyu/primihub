@@ -335,7 +335,8 @@ class XGB_GUEST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=5,
+                 min_child_sample=None,
+                #  min_child_sample=5,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -528,7 +529,8 @@ class XGB_GUEST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=5,
+                #  min_child_sample=5,
+                 min_child_sample=None,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -840,7 +842,8 @@ class XGB_HOST:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=5,
+                #  min_child_sample=5,
+                 min_child_sample=None,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -1177,7 +1180,8 @@ class XGB_HOST_EN:
                  learning_rate=0.1,
                  reg_lambda=1,
                  gamma=0,
-                 min_child_sample=5,
+                #  min_child_sample=5,
+                 min_child_sample=None,
                  min_child_weight=1,
                  objective='linear',
                  #  channel=None,
@@ -1678,7 +1682,8 @@ ph.context.Context.func_params_map = {
 # Number of tree to fit.
 num_tree = 1
 # Max depth of each tree.
-max_depth = 5
+# max_depth = 5
+max_depth = 1
 
 
 @ ph.context.function(role='host', protocol='xgboost', datasets=['train_hetero_xgb_host'], port='8000', task_type="classification")
