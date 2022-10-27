@@ -1384,10 +1384,11 @@ class XGB_HOST_EN:
                 party_id = id_w_gh['party_id']
                 tree_structure = {(party_id, record_id): {}}
                 gh_sum_right_en = id_w_gh['gh_sum_right']
-                vars = gh_sum_right_en.pop('var')
-                cuts = gh_sum_right_en.pop('cut')
-                right_m, right_n = gh_sum_right_en.shape
+
+                right_m, _ = gh_sum_right_en.shape
                 if right_m > 0:
+                    vars = gh_sum_right_en.pop('var')
+                    cuts = gh_sum_right_en.pop('cut')
                     gh_sum_right_en_li = gh_sum_right_en.values.flatten().tolist()
                     # print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
 
@@ -1400,7 +1401,7 @@ class XGB_HOST_EN:
                     gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
                 
                 else:
-                    gh_sum_right = pd.DataFrame()
+                    gh_sum_right = pd.DataFrame([], columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
                 # gh_sum_right = pd.DataFrame(
                 #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
                 # for item in [x for x in gh_sum_right_en.columns if x not in ['cut', 'var']]:
@@ -1415,10 +1416,10 @@ class XGB_HOST_EN:
                 #         gh_sum_right.loc[index,
                 #                          item] = gh_sum_right_en.loc[index, item]
                 gh_sum_left_en = id_w_gh['gh_sum_left']
-                vars1 = gh_sum_left_en.pop(['var'])
-                cuts1 = gh_sum_left_en.pop(['cut'])
-                left_m, left_n = gh_sum_left_en.shape
+                left_m, _ = gh_sum_left_en.shape
                 if left_m > 0:
+                    vars1 = gh_sum_left_en.pop(['var'])
+                    cuts1 = gh_sum_left_en.pop(['cut'])
                     gh_sum_left_en_li = gh_sum_left_en.values.flatten().tolist()
                     # print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
 
@@ -1434,7 +1435,7 @@ class XGB_HOST_EN:
 
                     gh_sum_left = pd.concat([gh_sum_left, vars1, cuts1], axis=1)
                 else:
-                    gh_sum_left = pd.DataFrame()
+                    gh_sum_left = pd.DataFrame([], columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
                 # gh_sum_left = pd.DataFrame(
                 #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
                 # for item in [x for x in gh_sum_left_en.columns if x not in ['cut', 'var']]:
@@ -1468,11 +1469,10 @@ class XGB_HOST_EN:
                 # gh_sum_dic = self.channel.recv()
                 gh_sum_dic = self.proxy_server.Get('gh_sum_dic')
                 gh_sum_right_en = gh_sum_dic['gh_sum_right']
-
-                vars = gh_sum_right_en.pop('var')
-                cuts = gh_sum_right_en.pop('cut')
-                right_m, right_n = gh_sum_right_en.shape
+                right_m, _ = gh_sum_right_en.shape
                 if right_m > 0:
+                    vars = gh_sum_right_en.pop('var')
+                    cuts = gh_sum_right_en.pop('cut')
                     gh_sum_right_en_li = gh_sum_right_en.values.flatten().tolist()
                     # print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
                     
@@ -1485,7 +1485,7 @@ class XGB_HOST_EN:
                     #                                            self.prv))
                     gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
                 else:
-                    gh_sum_right = pd.DataFrame()
+                    gh_sum_right = pd.DataFrame([], columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
 
 
                 # gh_sum_right = pd.DataFrame(
@@ -1502,14 +1502,13 @@ class XGB_HOST_EN:
                 #         gh_sum_right.loc[index,
                 #                          item] = gh_sum_right_en.loc[index, item]
                 gh_sum_left_en = gh_sum_dic['gh_sum_left']
-                vars1 = gh_sum_left_en.pop(['var'])
-                cuts1 = gh_sum_left_en.pop(['cut'])
-                left_m, left_n = gh_sum_left_en.shape
-                if left_m > 0:
 
+                left_m, _ = gh_sum_left_en.shape
+                if left_m > 0:
+                    vars1 = gh_sum_left_en.pop(['var'])
+                    cuts1 = gh_sum_left_en.pop(['cut'])
                     gh_sum_left_en_li = gh_sum_left_en.values.flatten().tolist()
                     # print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
-
 
                     gh_sum_left_dec_li = np.array(list(map(
                         lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))).reshape((left_m, -1))
@@ -1522,7 +1521,7 @@ class XGB_HOST_EN:
 
                     gh_sum_left = pd.concat([gh_sum_left, vars1, cuts1], axis=1)
                 else:
-                    gh_sum_left = pd.DataFrame()
+                    gh_sum_left = pd.DataFrame([], columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
                 # gh_sum_left = pd.DataFrame(
                 #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
                 # for item in [x for x in gh_sum_left_en.columns if x not in ['cut', 'var']]:
