@@ -80,13 +80,14 @@ class PallierAdd(object):
 
 @ray.remote
 class MapGH(object):
-    def __init__(self, item, col, g, h, pub, min_child_sample):
+    def __init__(self, item, col, g, h, pub, min_child_sample, pools):
         self.item = item
         self.col = col
         self.g = g
         self.h = h
         self.pub = pub
         self.min_child_sample = min_child_sample
+        self.pools = pools
 
     def map_gh(self, bins=10):
         if isinstance(self.col, pd.DataFrame) or isinstance(self.col, pd.Series):
@@ -104,7 +105,7 @@ class MapGH(object):
         H_rights = []
         vars = []
         cuts = []
-        actor_pools = ActorPool([PallierAdd.remote(self.pub), PallierAdd.remote(self.pub), PallierAdd.remote(self.pub), PallierAdd.remote(self.pub)])
+        # actor_pools = ActorPool([PallierAdd.remote(self.pub), PallierAdd.remote(self.pub), PallierAdd.remote(self.pub), PallierAdd.remote(self.pub)])
 
         col_sets = np.unique(self.col)
         col_bins = np.histogram(self.col, bins=bins)
@@ -134,7 +135,7 @@ class MapGH(object):
                   len(H_left_h), len(H_right_h))
             
             tmp_g_left, tmp_g_right, tmp_h_left,tmp_h_right  = list(
-                actor_pools.map(lambda a, v: a.pai_add.remote(v), [G_left_g, G_right_g, H_left_h, H_right_h]))
+                self.pools.map(lambda a, v: a.pai_add.remote(v), [G_left_g, G_right_g, H_left_h, H_right_h]))
 
             # tmp_g_left = functools.reduce(
             #     lambda x, y: opt_paillier_add(self.pub, x, y), G_left_g)
@@ -595,9 +596,10 @@ class XGB_GUEST_EN:
         g = X['g']
         h = X['h']
         # cols = [X[tmp_item] for tmp_item in items]
+        pools = ActorPool([PallierAdd.remote(pub), PallierAdd.remote(pub), PallierAdd.remote(pub), PallierAdd.remote(pub)])
 
         maps = [MapGH.remote(item=tmp_item, col=X[tmp_item], g=g,
-                             h=h, pub=pub, min_child_sample=self.min_child_sample) for tmp_item in items]
+                             h=h, pub=pub, min_child_sample=self.min_child_sample, pools=pools) for tmp_item in items]
 
         gh_reducer = ReduceGH.remote(maps)
         gh_result = ray.get(gh_reducer.reduce_gh.remote(bins=bins))
