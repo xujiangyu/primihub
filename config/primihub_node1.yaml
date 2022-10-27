@@ -60,6 +60,10 @@ datasets:
   - description: "data_with_null"
     model: "csv"
     source: "/tmp/FL/feature_engineer/data_with_null.csv"
+  
+  - description: "five_thous_host"
+    model: "csv"
+    source: "/tmp/FL/hetero_xgb/train/five_thous_host.csv"
 
 localkv: 
   model: "leveldb"
