@@ -572,7 +572,7 @@ class XGB_GUEST_EN:
         maps = [MapGH.remote(item=tmp_item, col=X[tmp_item], g=g,
                              h=h, pub=pub, min_child_sample=self.min_child_sample) for tmp_item in items]
 
-        gh_reducer = ReduceGH(maps)
+        gh_reducer = ReduceGH.remote(maps)
         gh_result = ray.get(gh_reducer.reduce_gh.remote(bins=bins))
         GH = gh_result
 
@@ -1230,8 +1230,8 @@ class XGB_HOST_EN:
         GH = pd.DataFrame(
             columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
         i = 0
-        g = X.pop('g')
-        h = X.pop('h')
+        # g = X.pop('g')
+        # h = X.pop('h')
         # y = h.pop('y')
 
         if hist:
