@@ -57,6 +57,133 @@ class PaillierActor(object):
     #     return n * 2
 
 
+@ray.remote
+class MapGH(object):
+    def __init__(self, item, col, g, h, pub, min_child_sample):
+        self.item = item
+        self.col = col
+        self.g = g
+        self.h = h
+        self.pub = pub
+        self.min_child_sample = min_child_sample
+
+    def map_gh(self, bins=10):
+        if isinstance(self.col, pd.DataFrame) or isinstance(self.col, pd.Series):
+            self.col = self.col.values
+
+        if isinstance(self.g, pd.DataFrame) or isinstance(self.g, pd.Series):
+            self.g = self.g.values
+
+        if isinstance(self.h, pd.DataFrame) or isinstance(self.h, pd.Series):
+            self.h = self.h.values
+
+        G_lefts = []
+        G_rights = []
+        H_lefts = []
+        H_rights = []
+        vars = []
+        cuts = []
+
+        col_sets = np.unique(self.col)
+        col_bins = np.histogram(self.col, bins=bins)
+        bins_split = col_bins[0][1:-1]
+        candidate_points = None
+
+        if len(bins_split) < len(col_sets):
+            candidate_points = bins_split
+        else:
+            candidate_points = col_sets
+
+        for tmp_cut in candidate_points:
+            flag = (self.col < tmp_cut)
+            less_sum = sum(flag.astype('int'))
+            great_sum = sum((1-flag).astype('int'))
+
+            if self.min_child_sample:
+                if (less_sum < self.min_child_sample) \
+                        | (great_sum < self.min_child_sample):
+                    continue
+
+            G_left_g = self.g[flag].tolist()
+            G_right_g = self.g[(1-flag).astype('bool')].tolist()
+            H_left_h = self.h[flag].tolist()
+            H_right_h = self.h[(1-flag).astype('bool')].tolist()
+            print("++++++++++", len(G_left_g), len(G_right_g),
+                  len(H_left_h), len(H_right_h))
+
+            tmp_g_left = functools.reduce(
+                lambda x, y: opt_paillier_add(self.pub, x, y), G_left_g)
+            tmp_g_right = functools.reduce(
+                lambda x, y: opt_paillier_add(self.pub, x, y), G_right_g)
+            tmp_h_left = functools.reduce(
+                lambda x, y: opt_paillier_add(self.pub, x, y), H_left_h)
+            tmp_h_right = functools.reduce(
+                lambda x, y: opt_paillier_add(self.pub, x, y), H_right_h)
+
+            G_lefts.append(tmp_g_left)
+            G_rights.append(tmp_g_right)
+            H_lefts.append(tmp_h_left)
+            H_rights.append(tmp_h_right)
+            vars.append(self.item)
+            cuts.append(tmp_cut)
+
+        return G_lefts, G_rights, H_lefts, H_rights, vars, cuts
+
+
+@ray.remote
+class ReduceGH(object):
+    def __init__(self, maps) -> None:
+        self.maps = maps
+
+    def reduce_gh(self,  bins=10):
+        global_g_left = []
+        global_g_right = []
+        global_h_left = []
+        global_h_right = []
+        global_vars = []
+        global_cuts = []
+        reduce_gh = ray.get([tmp_map.map_gh.remote(bins=bins)
+                            for tmp_map in self.maps])
+
+        for tmp_gh in reduce_gh:
+            tmp_g_left, tmp_g_right, tmp_h_left, tmp_h_right, tmp_var, tmp_cut = tmp_gh
+            global_g_left += tmp_g_left
+            global_g_right += tmp_g_right
+            global_h_left += tmp_h_left
+            global_h_right += tmp_h_right
+            global_vars += tmp_var
+            global_cuts += tmp_cut
+
+        GH = pd.DataFrame(
+            {'G_left': global_g_left, 'G_right': global_g_right, 'H_left': global_h_left, 'H_right': global_h_right, 'var': global_vars, 'cut': global_cuts})
+
+        return GH
+
+
+@ray.remote
+class GHActor(object):
+    def __init__(self, col, g, h) -> None:
+        self.col = col
+        self.g = g
+        self.h = h
+
+    def get_gh(self, cut):
+        flag = (self.col < cut)
+        less_sum = sum(flag.astype('int'))
+        great_sum = sum((1-flag).astype('int'))
+
+        if self.min_child_sample:
+            if (less_sum < self.min_child_sample) \
+                    | (great_sum < self.min_child_sample):
+                return []
+
+        # G_left_g = X.loc[flag, 'g'].values.tolist()
+        G_left_g = self.g.values[flag].tolist()
+        G_right_g = self.g.values[(1-flag).astype('bool')].tolist()
+        H_left_h = self.h.values[flag].tolist()
+        H_right_h = self.h.values[(1-flag).astype('bool')].tolist()
+
+
 def phe_map_enc(pub, pri, item):
     # return pub.encrypt(item)
     return opt_paillier_encrypt_crt(pub, pri, item)
@@ -417,9 +544,9 @@ class XGB_GUEST_EN:
 
     def get_GH(self, X, pub):
 
-        actor1, actor2 = PaillierActor.remote(None, pub
-                                              ), PaillierActor.remote(None, pub
-                                                                      )
+        # actor1, actor2 = PaillierActor.remote(None, pub
+        #                                       ), PaillierActor.remote(None, pub
+        #                                                               )
         # global
         # def opt_pai_add(x, y):
         #     return opt_paillier_add(pub, x, y)
@@ -429,14 +556,28 @@ class XGB_GUEST_EN:
         # GH = pd.DataFrame(
         #     arr, columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
         # GH.apply(opt_paillier_encrypt, args=(pub,))
-        G_lefts = []
-        G_rights = []
-        H_lefts = []
-        H_rights = []
-        vars = []
-        cuts = []
+        # G_lefts = []
+        # G_rights = []
+        # H_lefts = []
+        # H_rights = []
+        # vars = []
+        # cuts = []
 
-        i = 0
+        bins = 10
+        items = [x for x in X.columns if x not in ['g', 'h']]
+        g = X['g']
+        h = X['h']
+        # cols = [X[tmp_item] for tmp_item in items]
+
+        maps = [MapGH.remote(item=tmp_item, col=X[tmp_item], g=g,
+                             h=h, pub=pub, min_child_sample=self.min_child_sample) for tmp_item in items]
+
+        gh_reducer = ReduceGH(maps)
+        gh_result = ray.get(gh_reducer.reduce_gh.remote(bins=bins))
+        GH = gh_result
+
+        return GH
+
         for item in [x for x in X.columns if x not in ['g', 'h']]:
             # Categorical variables using greedy algorithm
             # if len(list(set(X[item]))) < 5:
