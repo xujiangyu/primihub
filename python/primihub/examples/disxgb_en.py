@@ -1387,7 +1387,7 @@ class XGB_HOST_EN:
                 vars = gh_sum_right_en.pop('var')
                 cuts = gh_sum_right_en.pop('cut')
                 right_m, right_n = gh_sum_right_en.shape
-                gh_sum_right_en_li = gh_sum_right_en.values.flatten.tolist()
+                gh_sum_right_en_li = gh_sum_right_en.values.flatten().tolist()
                 # print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
 
                 gh_sum_right_dec_li = np.array(list(map(
@@ -1478,6 +1478,7 @@ class XGB_HOST_EN:
                 #                                      args=(self.pub,
                 #                                            self.prv))
                 gh_sum_right = pd.concat([gh_sum_right, vars, cuts], axis=1)
+
 
                 # gh_sum_right = pd.DataFrame(
                 #     columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
