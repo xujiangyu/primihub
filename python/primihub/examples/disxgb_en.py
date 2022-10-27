@@ -37,6 +37,17 @@ logging.basicConfig(level=logging.DEBUG,
                     format=LOG_FORMAT, datefmt=DATE_FORMAT)
 logger = logging.getLogger("proxy")
 
+def opt_paillier_decrypt_crt(pub, prv, cipher_text):
+
+    if not isinstance (cipher_text, Opt_paillier_ciphertext):
+        print(f"{cipher_text} should be type of Opt_paillier_ciphertext()")
+        return
+
+    decrypt_text = opt_paillier_c2py.opt_paillier_decrypt_crt_warpper(pub, prv, cipher_text)
+
+    decrypt_text_num = int(decrypt_text)
+
+    return decrypt_text_num
 
 @ray.remote
 class PaillierActor(object):
