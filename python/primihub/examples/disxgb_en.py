@@ -66,16 +66,32 @@ class PaillierActor(object):
 
     # def double(self, n):
     #     return n * 2
+
 @ray.remote
-class PallierAdd(object):
+class ActorAdd(object):
     def __init__(self, pub):
         self.pub = pub
     
-    def pai_add(self, items):
-        pai_sum = functools.reduce(
+    def add(self, values):
+        return functools.reduce(
+                lambda x, y: opt_paillier_add(self.pub, x, y), values)
+
+@ray.remote
+class PallierAdd(object):
+    def __init__(self, pub, pools):
+        self.pub = pub
+        self.pools = pools
+    
+    def pai_add(self, items, nums=3):
+        if len(items)<20:
+            return functools.reduce(
                 lambda x, y: opt_paillier_add(self.pub, x, y), items)
-        
-        return pai_sum
+        cut_num = int(len(items) / nums)
+        cut_items = [items[:cut_num], items[cut_num: 2*cut_num], items[2*cut_num:]]
+        sum1, sum2, sum3  = list(ray.get([self.pools.add.remote(tmp_items) for tmp_items in cut_items]))
+
+        return functools.reduce(
+                lambda x, y: opt_paillier_add(self.pub, x, y), [sum1, sum2, sum3])
 
 
 @ray.remote
@@ -89,7 +105,7 @@ class MapGH(object):
         self.min_child_sample = min_child_sample
         self.pools = pools
 
-    def map_gh(self, bins=10):
+    def map_gh(self, bins=10, nums=3):
         if isinstance(self.col, pd.DataFrame) or isinstance(self.col, pd.Series):
             self.col = self.col.values
 
@@ -134,8 +150,9 @@ class MapGH(object):
             print("++++++++++", len(G_left_g), len(G_right_g),
                   len(H_left_h), len(H_right_h))
             
-            tmp_g_left, tmp_g_right, tmp_h_left,tmp_h_right  = list(
-                self.pools.map(lambda a, v: a.pai_add.remote(v), [G_left_g, G_right_g, H_left_h, H_right_h]))
+            # tmp_g_left, tmp_g_right, tmp_h_left,tmp_h_right  = list(
+            #     self.pools.map(lambda a, v: a.pai_add.remote(v), [G_left_g, G_right_g, H_left_h, H_right_h]))
+            tmp_g_left, tmp_g_right, tmp_h_left,tmp_h_right = list(ray.get([self.pools.pai_add.remote(tmp_li, nums) for tmp_li in [G_left_g, G_right_g, H_left_h, H_right_h]]))
 
             # tmp_g_left = functools.reduce(
             #     lambda x, y: opt_paillier_add(self.pub, x, y), G_left_g)
@@ -595,8 +612,9 @@ class XGB_GUEST_EN:
         items = [x for x in X.columns if x not in ['g', 'h']]
         g = X['g']
         h = X['h']
+        actor_add_pools = ActorPool([ActorAdd.remote(pub), ActorAdd.remote(pub), ActorAdd.remote(pub)])
         # cols = [X[tmp_item] for tmp_item in items]
-        pools = ActorPool([PallierAdd.remote(pub), PallierAdd.remote(pub), PallierAdd.remote(pub), PallierAdd.remote(pub)])
+        pools = ActorPool([PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools)])
 
         maps = [MapGH.remote(item=tmp_item, col=X[tmp_item], g=g,
                              h=h, pub=pub, min_child_sample=self.min_child_sample, pools=pools) for tmp_item in items]
@@ -1778,10 +1796,11 @@ def xgb_host_logic(cry_pri="paillier"):
         y_hat = np.array([0.5] * Y.shape[0])
         # ray.init()
         # pai_actor = PaillierActor(xgb_host.prv, xgb_host.pub)
-        actor1, actor2 = PaillierActor.remote(xgb_host.prv, xgb_host.pub
+        actor1, actor2, actor3 = PaillierActor.remote(xgb_host.prv, xgb_host.pub
                                               ), PaillierActor.remote(xgb_host.prv, xgb_host.pub
+                                                                      ), PaillierActor.remote(xgb_host.prv, xgb_host.pub
                                                                       )
-        pools = ActorPool([actor1, actor2])
+        pools = ActorPool([actor1, actor2, actor3])
 
         for t in range(xgb_host.n_estimators):
             print("Begin to trian tree: ", t + 1)
