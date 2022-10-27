@@ -1777,6 +1777,7 @@ def xgb_host_logic(cry_pri="paillier"):
             tmp_shape = GH_guest_en.shape
             tmp_columns = GH_guest_en.columns
             GH_guest_en_li = GH_guest_en.values.flatten().tolist()
+            print("====GH_guest_en_li=====", len(GH_guest_en_li), type(GH_guest_en_li[0]))
 
             GH_guest_dec_li = list(
                 pools.map(lambda a, v: a.pai_dec.remote(v), GH_guest_en_li))
