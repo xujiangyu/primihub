@@ -563,7 +563,7 @@ class XGB_GUEST_EN:
         # vars = []
         # cuts = []
 
-        bins = 10
+        bins = 20
         items = [x for x in X.columns if x not in ['g', 'h']]
         g = X['g']
         h = X['h']
