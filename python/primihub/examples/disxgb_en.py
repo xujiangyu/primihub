@@ -1372,6 +1372,7 @@ class XGB_HOST_EN:
                 vars = gh_sum_right_en.pop('var')
                 cuts = gh_sum_right_en.pop('cut')
                 gh_sum_right_en_li = gh_sum_right_en.values.tolist()
+                print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
 
                 gh_sum_right_dec_li = list(map(
                     lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))
@@ -1400,6 +1401,8 @@ class XGB_HOST_EN:
                 cuts1 = gh_sum_left_en['cut']
 
                 gh_sum_left_en_li = gh_sum_left_en.values.tolist()
+                print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
+
 
                 gh_sum_left_dec_li = list(map(
                     lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))
@@ -1448,6 +1451,8 @@ class XGB_HOST_EN:
                 vars = gh_sum_right_en.pop('var')
                 cuts = gh_sum_right_en.pop('cut')
                 gh_sum_right_en_li = gh_sum_right_en.values.tolist()
+                print("===gh_sum_right_en_li===", type(gh_sum_right_en_li[0]), gh_sum_right_en_li[0])
+                
 
                 gh_sum_right_dec_li = list(map(
                     lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_right_en_li))
@@ -1476,6 +1481,7 @@ class XGB_HOST_EN:
                 vars1 = gh_sum_left_en['var']
                 cuts1 = gh_sum_left_en['cut']
                 gh_sum_left_en_li = gh_sum_left_en.values.tolist()
+                print("===gh_sum_left_en_li===", type(gh_sum_left_en_li[0]), gh_sum_left_en_li[0])
 
                 gh_sum_left_dec_li = list(map(
                     lambda x: phe_map_dec(self.pub, self.prv, x), gh_sum_left_en_li))
