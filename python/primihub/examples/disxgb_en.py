@@ -88,7 +88,10 @@ class PallierAdd(object):
                 lambda x, y: opt_paillier_add(self.pub, x, y), items)
         cut_num = int(len(items) / nums)
         cut_items = [items[:cut_num], items[cut_num: 2*cut_num], items[2*cut_num:]]
-        sum1, sum2, sum3  = list(ray.get([self.pools.add.remote(tmp_items) for tmp_items in cut_items]))
+
+        sum1, sum2, sum3 = list(
+            self.pools.map(lambda a, v: a.add.remote(v), cut_items))
+        # sum1, sum2, sum3  = list(ray.get([self.pools.add.remote(tmp_items) for tmp_items in cut_items]))
 
         return functools.reduce(
                 lambda x, y: opt_paillier_add(self.pub, x, y), [sum1, sum2, sum3])
@@ -150,9 +153,9 @@ class MapGH(object):
             print("++++++++++", len(G_left_g), len(G_right_g),
                   len(H_left_h), len(H_right_h))
             
-            # tmp_g_left, tmp_g_right, tmp_h_left,tmp_h_right  = list(
-            #     self.pools.map(lambda a, v: a.pai_add.remote(v), [G_left_g, G_right_g, H_left_h, H_right_h]))
-            tmp_g_left, tmp_g_right, tmp_h_left,tmp_h_right = list(ray.get([self.pools.pai_add.remote(tmp_li, nums) for tmp_li in [G_left_g, G_right_g, H_left_h, H_right_h]]))
+            tmp_g_left, tmp_g_right, tmp_h_left,tmp_h_right  = list(
+                self.pools.map(lambda a, v: a.pai_add.remote(v), [G_left_g, G_right_g, H_left_h, H_right_h]))
+            # tmp_g_left, tmp_g_right, tmp_h_left,tmp_h_right = list(ray.get([self.pools.pai_add.remote(tmp_li, nums) for tmp_li in [G_left_g, G_right_g, H_left_h, H_right_h]]))
 
             # tmp_g_left = functools.reduce(
             #     lambda x, y: opt_paillier_add(self.pub, x, y), G_left_g)
@@ -613,6 +616,7 @@ class XGB_GUEST_EN:
         g = X['g']
         h = X['h']
         actor_add_pools = ActorPool([ActorAdd.remote(pub), ActorAdd.remote(pub), ActorAdd.remote(pub)])
+        # actor_add_pools = [ActorAdd.remote(pub), ActorAdd.remote(pub), ActorAdd.remote(pub)]
         # cols = [X[tmp_item] for tmp_item in items]
         pools = ActorPool([PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools)])
 
