@@ -69,13 +69,12 @@ class PaillierActor(object):
 
 @ray.remote
 class ActorAdd(object):
-    def __init__(self, pub, values):
+    def __init__(self, pub):
         self.pub = pub
-        self.values = values
     
-    def add(self):
+    def add(self, values):
         tmp_sum = None
-        for item in self.values:
+        for item in values:
             if tmp_sum is None:
                 tmp_sum = item
             else:
@@ -84,10 +83,13 @@ class ActorAdd(object):
 
 @ray.remote
 class PallierAdd(object):
-    def __init__(self, pub):
+    def __init__(self, pub, nums, add_actors):
         self.pub = pub
+        self.nums = nums
+        self.add_actors = add_actors
     
-    def pai_add(self, items, nums=50):
+    def pai_add(self, items):
+        nums = self.nums
         if len(items)<nums:
             return functools.reduce(
                 lambda x, y: opt_paillier_add(self.pub, x, y), items)
@@ -96,17 +98,21 @@ class PallierAdd(object):
         inter_results = []
         for i in range(nums):
             tmp_val = items[i*N:(i+1)*N]
+            tmp_add_actor = self.add_actors[i]
             if i == (nums-1):
                 tmp_val = items[i*N:]
-            tmp_actor_add = ActorAdd.remote(self.pub, tmp_val)
-            inter_results.append(tmp_actor_add.add.remote())
+            tmp_sum = tmp_add_actor.add.remote(tmp_val)
+            # tmp_actor_add = ActorAdd.remote(self.pub, tmp_val)
+            inter_results.append(tmp_sum)
 
 
         # inter_results = [ActorAdd.remote(self.pub, items[i*N:(i+1)*N]).add.remote() for i in range(nums)]
+        final_result = ray.get(inter_results)
+        final_result = functools.reduce(
+                lambda x, y: opt_paillier_add(self.pub, x, y), final_result)
+        # final_results = ActorAdd.remote(self.pub, ray.get(inter_results)).add.remote()
 
-        final_results = ActorAdd.remote(self.pub, ray.get(inter_results)).add.remote()
-
-        return ray.get(final_results)
+        return final_result
 
         # for i in range(nums):
 
@@ -635,15 +641,17 @@ class XGB_GUEST_EN:
         # vars = []
         # cuts = []
 
-        bins = 20
+        bins = 13
         items = [x for x in X.columns if x not in ['g', 'h']]
         g = X['g']
         h = X['h']
+        actor_nums = 50
+        generate_add_actors = [ActorAdd.remote(pub) for _ in range(actor_nums)]
         # actor_add_pools = ActorPool([ActorAdd.remote(pub), ActorAdd.remote(pub), ActorAdd.remote(pub)])
         # actor_add_pools = [ActorAdd.remote(pub), ActorAdd.remote(pub), ActorAdd.remote(pub)]
         # cols = [X[tmp_item] for tmp_item in items]
         # pools = ActorPool([PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools)])
-        pools = ActorPool([PallierAdd.remote(pub), PallierAdd.remote(pub), PallierAdd.remote(pub), PallierAdd.remote(pub)])
+        pools = ActorPool([PallierAdd.remote(pub, actor_nums, generate_add_actors), PallierAdd.remote(pub, actor_nums, generate_add_actors), PallierAdd.remote(pub, actor_nums, generate_add_actors), PallierAdd.remote(pub, actor_nums, generate_add_actors)])
 
         maps = [MapGH.remote(item=tmp_item, col=X[tmp_item], g=g,
                              h=h, pub=pub, min_child_sample=self.min_child_sample, pools=pools) for tmp_item in items]
