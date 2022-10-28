@@ -93,7 +93,16 @@ class PallierAdd(object):
                 lambda x, y: opt_paillier_add(self.pub, x, y), items)
         N = int(len(items) / nums)
 
-        inter_results = [ActorAdd.remote(self.pub, items[i*N:(i+1)*N]).add.remote() for i in range(nums)]
+        inter_results = []
+        for i in range(nums):
+            tmp_val = items[i*N:(i+1)*N]
+            if i == (nums-1):
+                tmp_val = items[i*N:]
+            tmp_actor_add = ActorAdd.remote(self.pub, tmp_val)
+            inter_results.append(tmp_actor_add.add.remote())
+
+
+        # inter_results = [ActorAdd.remote(self.pub, items[i*N:(i+1)*N]).add.remote() for i in range(nums)]
 
         final_results = ActorAdd.remote(self.pub, ray.get(inter_results)).add.remote()
 
