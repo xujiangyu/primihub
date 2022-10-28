@@ -630,10 +630,11 @@ class XGB_GUEST_EN:
         items = [x for x in X.columns if x not in ['g', 'h']]
         g = X['g']
         h = X['h']
-        actor_add_pools = ActorPool([ActorAdd.remote(pub), ActorAdd.remote(pub), ActorAdd.remote(pub)])
+        # actor_add_pools = ActorPool([ActorAdd.remote(pub), ActorAdd.remote(pub), ActorAdd.remote(pub)])
         # actor_add_pools = [ActorAdd.remote(pub), ActorAdd.remote(pub), ActorAdd.remote(pub)]
         # cols = [X[tmp_item] for tmp_item in items]
-        pools = ActorPool([PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools)])
+        # pools = ActorPool([PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools), PallierAdd.remote(pub, actor_add_pools)])
+        pools = ActorPool([PallierAdd.remote(pub), PallierAdd.remote(pub), PallierAdd.remote(pub), PallierAdd.remote(pub)])
 
         maps = [MapGH.remote(item=tmp_item, col=X[tmp_item], g=g,
                              h=h, pub=pub, min_child_sample=self.min_child_sample, pools=pools) for tmp_item in items]
