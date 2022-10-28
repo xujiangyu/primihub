@@ -69,32 +69,47 @@ class PaillierActor(object):
 
 @ray.remote
 class ActorAdd(object):
-    def __init__(self, pub):
+    def __init__(self, pub, values):
         self.pub = pub
+        self.values = values
     
-    def add(self, values):
-        return functools.reduce(
-                lambda x, y: opt_paillier_add(self.pub, x, y), values)
+    def add(self):
+        tmp_sum = None
+        for item in self.values:
+            if tmp_sum is None:
+                tmp_sum = item
+            else:
+                tmp_sum = opt_paillier_add(self.pub, tmp_sum, item)
+        return tmp_sum
 
 @ray.remote
 class PallierAdd(object):
-    def __init__(self, pub, pools):
+    def __init__(self, pub):
         self.pub = pub
-        self.pools = pools
     
-    def pai_add(self, items, nums=3):
-        if len(items)<20:
+    def pai_add(self, items, nums=50):
+        if len(items)<nums:
             return functools.reduce(
                 lambda x, y: opt_paillier_add(self.pub, x, y), items)
-        cut_num = int(len(items) / nums)
-        cut_items = [items[:cut_num], items[cut_num: 2*cut_num], items[2*cut_num:]]
+        N = int(len(items) / nums)
 
-        sum1, sum2, sum3 = list(
-            self.pools.map(lambda a, v: a.add.remote(v), cut_items))
-        # sum1, sum2, sum3  = list(ray.get([self.pools.add.remote(tmp_items) for tmp_items in cut_items]))
+        inter_results = [ActorAdd.remote(self.pub, items[i*N:(i+1)*N]).add.remote() for i in range(nums)]
 
-        return functools.reduce(
-                lambda x, y: opt_paillier_add(self.pub, x, y), [sum1, sum2, sum3])
+        final_results = ActorAdd.remote(self.pub, ray.get(inter_results)).add.remote()
+
+        return ray.get(final_results)
+
+        # for i in range(nums):
+
+
+        # cut_items = [items[:cut_num], items[cut_num: 2*cut_num], items[2*cut_num:]]
+
+        # sum1, sum2, sum3 = list(
+        #     self.pools.map(lambda a, v: a.add.remote(v), cut_items))
+        # # sum1, sum2, sum3  = list(ray.get([self.pools.add.remote(tmp_items) for tmp_items in cut_items]))
+
+        # return functools.reduce(
+        #         lambda x, y: opt_paillier_add(self.pub, x, y), [sum1, sum2, sum3])
 
 
 @ray.remote
