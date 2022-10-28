@@ -88,8 +88,8 @@ class PallierAdd(object):
         self.nums = nums
         self.add_actors = add_actors
     
-    def pai_add(self, items):
-        nums = self.nums
+    def pai_add(self, items, min_num = 3):
+        nums = self.nums* min_num
         if len(items)<nums:
             return functools.reduce(
                 lambda x, y: opt_paillier_add(self.pub, x, y), items)
