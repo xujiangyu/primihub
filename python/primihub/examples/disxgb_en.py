@@ -94,22 +94,26 @@ class PallierAdd(object):
             return functools.reduce(
                 lambda x, y: opt_paillier_add(self.pub, x, y), items)
         N = int(len(items) / nums)
+        items_list = []
 
         inter_results = []
         for i in range(nums):
             tmp_val = items[i*N:(i+1)*N]
-            tmp_add_actor = self.add_actors[i]
+            # tmp_add_actor = self.add_actors[i]
             if i == (nums-1):
                 tmp_val = items[i*N:]
-            tmp_sum = tmp_add_actor.add.remote(tmp_val)
+            items_list.append(tmp_val)
+            # tmp_sum = tmp_add_actor.add.remote(tmp_val)
             # tmp_actor_add = ActorAdd.remote(self.pub, tmp_val)
-            inter_results.append(tmp_sum)
+            # inter_results.append(tmp_sum)
+        inter_results = list(self.add_actors.map(lambda a, v: a.add.remote(v), items_list))
 
-
-        # inter_results = [ActorAdd.remote(self.pub, items[i*N:(i+1)*N]).add.remote() for i in range(nums)]
-        final_result = ray.get(inter_results)
+        #     tmp_g_left, tmp_g_right, tmp_h_left,tmp_h_right  = list(
+        #         self.pools.map(lambda a, v: a.pai_add.remote(v), [G_left_g, G_right_g, H_left_h, H_right_h]))
+        # # inter_results = [ActorAdd.remote(self.pub, items[i*N:(i+1)*N]).add.remote() for i in range(nums)]
+        # final_result = ray.get(inter_results)
         final_result = functools.reduce(
-                lambda x, y: opt_paillier_add(self.pub, x, y), final_result)
+                lambda x, y: opt_paillier_add(self.pub, x, y), inter_results)
         # final_results = ActorAdd.remote(self.pub, ray.get(inter_results)).add.remote()
 
         return final_result
@@ -646,7 +650,7 @@ class XGB_GUEST_EN:
         g = X['g']
         h = X['h']
         actor_nums = 50
-        generate_add_actors = [ActorAdd.remote(pub) for _ in range(actor_nums)]
+        generate_add_actors = ActorPool([ActorAdd.remote(pub) for _ in range(actor_nums)])
         # actor_add_pools = ActorPool([ActorAdd.remote(pub), ActorAdd.remote(pub), ActorAdd.remote(pub)])
         # actor_add_pools = [ActorAdd.remote(pub), ActorAdd.remote(pub), ActorAdd.remote(pub)]
         # cols = [X[tmp_item] for tmp_item in items]
