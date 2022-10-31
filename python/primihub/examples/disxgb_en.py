@@ -626,25 +626,6 @@ class XGB_GUEST_EN:
 
     def get_GH(self, X, pub):
 
-        # actor1, actor2 = PaillierActor.remote(None, pub
-        #                                       ), PaillierActor.remote(None, pub
-        #                                                               )
-        # global
-        # def opt_pai_add(x, y):
-        #     return opt_paillier_add(pub, x, y)
-
-        # Calculate G_left、G_right、H_left、H_right under feature segmentation
-        # arr = np.zeros((X.shape[0] * 10, 6))
-        # GH = pd.DataFrame(
-        #     arr, columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
-        # GH.apply(opt_paillier_encrypt, args=(pub,))
-        # G_lefts = []
-        # G_rights = []
-        # H_lefts = []
-        # H_rights = []
-        # vars = []
-        # cuts = []
-
         bins = 13
         items = [x for x in X.columns if x not in ['g', 'h']]
         g = X['g']
@@ -665,134 +646,6 @@ class XGB_GUEST_EN:
         GH = gh_result
 
         return GH
-
-        for item in [x for x in X.columns if x not in ['g', 'h']]:
-            # Categorical variables using greedy algorithm
-            # if len(list(set(X[item]))) < 5:
-
-            for tmp_cut in list(set(X[item])):
-
-                flag = (X[item] < tmp_cut)
-                less_sum = sum(flag.astype('int'))
-                great_sum = sum((1-flag).astype('int'))
-
-                if self.min_child_sample:
-                    if (less_sum < self.min_child_sample) \
-                            | (great_sum < self.min_child_sample):
-                        continue
-
-                G_left_g = X.loc[flag, 'g'].values.tolist()
-                G_right_g = X.loc[(1-flag).astype('bool'), 'g'].values.tolist()
-                H_left_h = X.loc[flag, 'h'].values.tolist()
-                H_right_h = X.loc[(1-flag).astype('bool'), 'h'].values.tolist()
-                print("++++++++++", len(G_left_g), len(G_right_g),
-                      len(H_left_h), len(H_right_h))
-
-                # tmp_g_left = functools.reduce(opt_pai_add, G_left_g)
-                # opt_paillier_add(pub, x, y)
-
-                tmp_g_left = functools.reduce(
-                    lambda x, y: opt_paillier_add(pub, x, y), G_left_g)
-                tmp_g_right = functools.reduce(
-                    lambda x, y: opt_paillier_add(pub, x, y), G_right_g)
-                tmp_h_left = functools.reduce(
-                    lambda x, y: opt_paillier_add(pub, x, y), H_left_h)
-                tmp_h_right = functools.reduce(
-                    lambda x, y: opt_paillier_add(pub, x, y), H_right_h)
-
-                # tmp_g_right = functools.reduce(opt_pai_add, G_right_g)
-                # tmp_h_left = functools.reduce(opt_pai_add, H_left_h)
-                # tmp_h_right = functools.reduce(opt_pai_add, H_right_h)
-
-                G_lefts.append(tmp_g_left)
-                G_rights.append(tmp_g_right)
-                H_lefts.append(tmp_h_left)
-                H_rights.append(tmp_h_right)
-                vars.append(item)
-                cuts.append(tmp_cut)
-
-        # GH = pd.DataFrame(
-        #     arr, columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
-        GH = pd.DataFrame(
-            {'G_left': G_lefts, 'G_right': G_rights, 'H_left': H_lefts, 'H_right': H_rights, 'var': vars, 'cut': cuts})
-
-        return GH
-
-        # tmp_g_right = GH.loc[i, 'G_left']
-
-        # if self.min_child_sample:
-        #     # if (X.loc[X[item] < cuts].shape[0] < self.min_child_sample) \
-        #     #         | (X.loc[X[item] >= cuts].shape[0] < self.min_child_sample):
-        #     if (less_sum < self.min_child_sample) \
-        #             | (great_sum < self.min_child_sample):
-        #         continue
-        # for ind in X.index:
-        #     if X.loc[ind, item] < cuts:
-        #         if GH.loc[i, 'G_left'] == 0:
-        #             GH.loc[i, 'G_left'] = X.loc[ind, 'g']
-        #         else:
-        #             GH.loc[i, 'G_left'] = opt_paillier_add(
-        #                 pub, GH.loc[i, 'G_left'], X.loc[ind, 'g'])
-        #         if GH.loc[i, 'H_left'] == 0:
-        #             GH.loc[i, 'H_left'] = X.loc[ind, 'h']
-        #         else:
-        #             GH.loc[i, 'H_left'] = opt_paillier_add(
-        #                 pub, GH.loc[i, 'H_left'], X.loc[ind, 'h'])
-        #     else:
-        #         if GH.loc[i, 'G_right'] == 0:
-        #             GH.loc[i, 'G_right'] = X.loc[ind, 'g']
-        #         else:
-        #             GH.loc[i, 'G_right'] = opt_paillier_add(
-        #                 pub, GH.loc[i, 'G_right'], X.loc[ind, 'g'])
-        #         if GH.loc[i, 'H_right'] == 0:
-        #             GH.loc[i, 'H_right'] = X.loc[ind, 'h']
-        #         else:
-        #             GH.loc[i, 'H_right'] = opt_paillier_add(
-        #                 pub, GH.loc[i, 'H_right'], X.loc[ind, 'h'])
-        # GH.loc[i, 'var'] = item
-        # GH.loc[i, 'cut'] = cuts
-        # i = i + 1
-        # Continuous variables using approximation algorithm
-        # else:
-        #     old_list = list(set(X[item]))
-        #     new_list = []
-        #     # four candidate points
-        #     j = int(len(old_list) / 4)
-        #     for z in range(0, len(old_list), j):
-        #         new_list.append(old_list[z])
-        #     for cuts in new_list:
-        #         if self.min_child_sample:
-        #             if (X.loc[X[item] < cuts].shape[0] < self.min_child_sample) \
-        #                     | (X.loc[X[item] >= cuts].shape[0] < self.min_child_sample):
-        #                 continue
-        #         GH.loc[i, 'G_left'] = X.loc[X[item] < cuts, 'g'].sum()
-        #         GH.loc[i, 'G_right'] = X.loc[X[item] >= cuts, 'g'].sum()
-        #         GH.loc[i, 'H_left'] = X.loc[X[item] < cuts, 'h'].sum()
-        #         GH.loc[i, 'H_right'] = X.loc[X[item] >= cuts, 'h'].sum()
-        #         GH.loc[i, 'var'] = item
-        #         GH.loc[i, 'cut'] = cuts
-        #         i = i + 1
-        # return GH
-
-    # def find_split(self, GH):
-    #     # Find the feature corresponding to the best split and the split value
-    #     GH_best = pd.DataFrame(columns=['G_left', 'G_right', 'H_left', 'H_right', 'var', 'cut'])
-    #     max_gain = 0
-    #     for item in GH.index:
-    #         gain = GH.loc[item, 'G_left'] ** 2 / (GH.loc[item, 'H_left'] + self.reg_lambda) + \
-    #                GH.loc[item, 'G_right'] ** 2 / (GH.loc[item, 'H_right'] + self.reg_lambda) - \
-    #                (GH.loc[item, 'G_left'] + GH.loc[item, 'G_right']) ** 2 / (
-    #                        GH.loc[item, 'H_left'] + GH.loc[item, 'H_right'] + + self.reg_lambda)
-    #         gain = gain / 2 - self.gamma
-    #         if gain > max_gain:
-    #             max_gain = gain
-    #             GH_best.loc[0, 'G_left'] = GH.loc[item, 'G_left']
-    #             GH_best.loc[0, 'G_right'] = GH.loc[item, 'G_right']
-    #             GH_best.loc[0, 'H_left'] = GH.loc[item, 'H_left']
-    #             GH_best.loc[0, 'H_right'] = GH.loc[item, 'H_right']
-    #             GH_best.loc[0, 'var'] = GH.loc[item, 'var']
-    #             GH_best.loc[0, 'cut'] = GH.loc[item, 'cut']
-    #     return GH_best
 
     def split(self, X, best_var, best_cut, GH_best, w):
         # Calculate the weight of leaf nodes after splitting
@@ -991,26 +844,6 @@ class XGB_HOST:
                 GH.loc[i, 'var'] = item
                 GH.loc[i, 'cut'] = cuts
                 i = i + 1
-            # Continuous variables using approximation algorithm
-            # else:
-            #     old_list = list(set(X[item]))
-            #     new_list = []
-            #     # four candidate points
-            #     j = int(len(old_list) / 4)
-            #     for z in range(0, len(old_list), j):
-            #         new_list.append(old_list[z])
-            #     for cuts in new_list:
-            #         if self.min_child_sample:
-            #             if (X.loc[X[item] < cuts].shape[0] < self.min_child_sample) \
-            #                     | (X.loc[X[item] >= cuts].shape[0] < self.min_child_sample):
-            #                 continue
-            #         GH.loc[i, 'G_left'] = X.loc[X[item] < cuts, 'g'].sum()
-            #         GH.loc[i, 'G_right'] = X.loc[X[item] >= cuts, 'g'].sum()
-            #         GH.loc[i, 'H_left'] = X.loc[X[item] < cuts, 'h'].sum()
-            #         GH.loc[i, 'H_right'] = X.loc[X[item] >= cuts, 'h'].sum()
-            #         GH.loc[i, 'var'] = item
-            #         GH.loc[i, 'cut'] = cuts
-            #         i = i + 1
         return GH
 
     def find_split(self, GH_host, GH_guest):
@@ -1036,20 +869,7 @@ class XGB_HOST:
             GH_best['G_right_best'] = GH.loc[max_index, 'G_right']
             GH_best['H_left_best'] = GH.loc[max_index, 'H_left']
             GH_best['H_right_best'] = GH.loc[max_index, 'H_right']
-        # for item in GH.index:
-        #     gain = GH.loc[item, 'G_left'] ** 2 / (GH.loc[item, 'H_left'] + self.reg_lambda) + \
-        #         GH.loc[item, 'G_right'] ** 2 / (GH.loc[item, 'H_right'] + self.reg_lambda) - \
-        #         (GH.loc[item, 'G_left'] + GH.loc[item, 'G_right']) ** 2 / (
-        #         GH.loc[item, 'H_left'] + GH.loc[item, 'H_right'] + + self.reg_lambda)
-        #     gain = gain / 2 - self.gamma
-        #     if gain > max_gain:
-        #         best_var = GH.loc[item, 'var']
-        #         best_cut = GH.loc[item, 'cut']
-        #         max_gain = gain
-        #         GH_best['G_left_best'] = GH.loc[item, 'G_left']
-        #         GH_best['G_right_best'] = GH.loc[item, 'G_right']
-        #         GH_best['H_left_best'] = GH.loc[item, 'H_left']
-        #         GH_best['H_right_best'] = GH.loc[item, 'H_right']
+
         return best_var, best_cut, GH_best
 
     def split(self, X, best_var, best_cut, GH_best, w):
