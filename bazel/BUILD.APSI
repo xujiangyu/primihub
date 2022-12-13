@@ -18,6 +18,9 @@ cmake(
     cache_entries = {
         "SEAL_THROW_ON_TRANSPARENT_CIPHERTEXT": "OFF",
     },
+    build_args = [
+      "-j`nproc`",
+    ],
     visibility = ["//visibility:public"],
     # cache_entries = {
     #     "__LINUX__": "1",

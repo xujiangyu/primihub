@@ -417,7 +417,7 @@ new_git_repository(
   name = "com_github_primihub_seal_40",
   build_file = "//bazel:BUILD.seal",
   remote = "https://github.com/primihub/SEAL.git",
-  branch = "main",
+  branch = "change_submodule_resource",
 )
 
 http_archive(
