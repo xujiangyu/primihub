@@ -236,8 +236,12 @@ class ServerChannelProxy:
 
 class XGBHostInfer:
 
-    def __init__(self, host_tree, host_lookup_table, proxy_server,
-                 proxy_client_guest, lr) -> None:
+    def __init__(self,
+                 host_tree,
+                 host_lookup_table,
+                 proxy_server=None,
+                 proxy_client_guest=None,
+                 lr=None) -> None:
         self.tree = host_tree
         self.lookup = host_lookup_table
         self.proxy_server = proxy_server
@@ -327,8 +331,11 @@ class XGBHostInfer:
 
 class XGBGuestInfer:
 
-    def __init__(self, guest_tree, guest_lookup_table, proxy_server,
-                 proxy_client_host) -> None:
+    def __init__(self,
+                 guest_tree,
+                 guest_lookup_table,
+                 proxy_server=None,
+                 proxy_client_host=None) -> None:
         self.tree = guest_tree
         self.lookup_table = guest_lookup_table
         self.proxy_server = proxy_server
@@ -479,13 +486,13 @@ def xgb_guest_infer():
 
     guest_nodes = role_node_map["guest"]
     guest_port = node_addr_map[guest_nodes[0]].split(":")[1]
-    proxy_server = ServerChannelProxy(guest_port)
-    proxy_server.StartRecvLoop()
+    # proxy_server = ServerChannelProxy(guest_port)
+    # proxy_server.StartRecvLoop()
 
     host_nodes = role_node_map["host"]
     host_ip, host_port = node_addr_map[host_nodes[0]].split(":")
 
-    proxy_client_host = ClientChannelProxy(host_ip, host_port, "host")
+    # proxy_client_host = ClientChannelProxy(host_ip, host_port, "host")
 
     lookup_file_path = ph.context.Context.get_guest_lookup_file_path(
     ) + ".guest"
