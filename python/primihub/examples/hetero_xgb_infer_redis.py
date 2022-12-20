@@ -261,7 +261,7 @@ class XGBHostInfer:
 
             if role == 'guest':
                 # ids = self.proxy_server.Get(str(record_id) + '_ids')
-                ids = self.host_redis.get(str(record_id) + '_ids')
+                ids = self.host_redis.get(str(record_id) + '_ids' + '_guest')
                 id_left = ids['id_left']
                 id_right = ids['id_right']
                 host_test_left = host_test.loc[id_left]
@@ -288,7 +288,7 @@ class XGBHostInfer:
                 #     str(record_id) + '_ids')
 
                 self.host_redis.set(
-                    str(record_id) + '_ids', {
+                    str(record_id) + '_ids' + '_host', {
                         'id_left': host_test_left.index,
                         'id_right': host_test_right.index
                     })
@@ -358,7 +358,7 @@ class XGBGuestInfer:
                 guest_test_right = guest_test.loc[guest_test[var] >= cut]
                 id_right = guest_test_right.index
                 self.guest_redis.set(
-                    str(record_id) + '_ids', {
+                    str(record_id) + '_ids' + '_guest', {
                         'id_left': id_left,
                         'id_right': id_right
                     })
@@ -370,7 +370,7 @@ class XGBGuestInfer:
                 #     str(record_id) + '_ids')
 
             else:
-                ids = self.guest_redis.get(str(record_id) + '_ids')
+                ids = self.guest_redis.get(str(record_id) + '_ids' + '_host')
                 # ids = self.proxy_server.Get(str(record_id) + '_ids')
                 id_left = ids['id_left']
 
