@@ -10,6 +10,8 @@ import numpy as np
 import logging
 import pickle
 
+import yaml
+from pathlib import Path
 from primihub.primitive.opt_paillier_c2py_warpper import *
 import time
 import pandas as pd
@@ -393,6 +395,16 @@ class XGBGuestInfer:
             self.guest_get_tree_ids(X, tree, current_lookup)
 
 
+yaml_file = "/app/config/primihub_node0.yaml"
+yaml_dict = yaml.safe_load(Path(yaml_file).read_text())
+redis_meta = yaml_dict['redis_meta_service']
+
+redis_password = redis_meta['redis_password']
+redis_addr = redis_meta['redis_addr']
+redis_ip = redis_addr.split(":")[0]
+redis_port = int(redis_addr.split(":")[1])
+
+
 @ph.context.function(role='host',
                      protocol='xgboost',
                      datasets=['test_hetero_xgb_host'],
@@ -421,10 +433,10 @@ def xgb_host_infer():
 
     # proxy_server = ServerChannelProxy(host_port)
     # proxy_server.StartRecvLoop()
-    host_redis = RedisProxy(host='172.21.3.108',
-                            port=15550,
+    host_redis = RedisProxy(host=redis_ip,
+                            port=redis_port,
                             db=0,
-                            password='primihub')
+                            password=redis_password)
 
     host_model_path = ph.context.Context.get_model_file_path() + ".host"
     host_lookup_path = ph.context.Context.get_host_lookup_file_path() + ".host"
@@ -500,10 +512,10 @@ def xgb_guest_infer():
 
     print("guest_model_path: ", guest_model_path)
 
-    guest_redis = RedisProxy(host='172.21.3.108',
-                             port=15550,
+    guest_redis = RedisProxy(host=redis_ip,
+                             port=redis_port,
                              db=0,
-                             password='primihub')
+                             password=redis_password)
 
     with open(guest_model_path, 'rb') as guestModel:
         guest_model = pickle.load(guestModel)
