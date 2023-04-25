@@ -5,8 +5,7 @@ from typing import Dict
 class BaseModel(metaclass=ABCMeta):
 
     def __init__(self, **kwargs):
-        self.task_id = kwargs['task_id']
-        self.job_id = kwargs['job_id']
+        self.kwargs = kwargs
 
     @abstractmethod
     def get_summary(self) -> Dict:
