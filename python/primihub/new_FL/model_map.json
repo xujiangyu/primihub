@@ -20,5 +20,15 @@
             "func": "ExampleHost",
             "module": "primihub.new_FL.algorithm.example.dev_example_host_xus"
         }
+    },
+    "HeteroLR": {
+        "guest": {
+            "func": "HeterLrGuest",
+            "module": "primihub.FL.model.logistic_regression.hetero_lr_guest"
+        },
+        "host": {
+            "func": "HeterLrHost",
+            "module": "primihub.FL.model.logistic_regression.hetero_lr_host"
+        }
     }
 }

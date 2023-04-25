@@ -61,7 +61,8 @@ def run(task_params):
     for key, val in roles.items():
         if party_name in val:
             current_role_params['role'] = key
-            break
+        else:
+            current_role_params['neighbors'] = val
 
     node_info = task_params.party_access_info
 
