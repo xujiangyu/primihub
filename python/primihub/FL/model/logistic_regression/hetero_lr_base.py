@@ -100,18 +100,18 @@ class HeteroLrBase(BaseModel):
         self.role_params = self.kwargs['role_params']
         self.data_set = self.role_params['data_set']
 
+        # set party node information
+        self.node_info = self.kwargs['node_info']
+
+        # set other parameters
+        self.other_params = self.kwargs['other_params']
+
         # read from data path
         value = eval(self.other_params.party_datasets[
             self.other_params.party_name].data[self.data_set])
 
         data_path = value['data_path']
         self.data = pd.read_csv(data_path)
-
-        # set party node information
-        self.node_info = self.kwargs['node_info']
-
-        # set other parameters
-        self.other_params = self.kwargs['other_params']
 
     def run(self):
         pass
