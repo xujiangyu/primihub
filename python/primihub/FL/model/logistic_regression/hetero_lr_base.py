@@ -57,6 +57,7 @@ class HeteroLrBase(BaseModel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.set_inputs()
 
     def loss(self, y_hat, y_true):
         if self.loss_type == 'log':
