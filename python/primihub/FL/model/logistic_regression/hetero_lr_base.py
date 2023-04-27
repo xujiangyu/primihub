@@ -108,7 +108,7 @@ class HeteroLrBase(BaseModel):
 
         # read from data path
         print(
-            "=====",
+            "=====", self.other_params,
             self.other_params.party_datasets[self.other_params.party_name],
             self.other_params.party_datasets[self.other_params.party_name].data,
             self.other_params.party_datasets[self.other_params.party_name].data[
