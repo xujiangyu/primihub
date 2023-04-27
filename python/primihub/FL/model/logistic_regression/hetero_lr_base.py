@@ -107,14 +107,8 @@ class HeteroLrBase(BaseModel):
         self.other_params = self.kwargs['other_params']
 
         # read from data path
-        print(
-            "=====", self.other_params,
-            self.other_params.party_datasets[self.other_params.party_name],
-            self.other_params.party_datasets[self.other_params.party_name].data,
-            self.other_params.party_datasets[self.other_params.party_name].data[
-                self.data_set])
         value = eval(self.other_params.party_datasets[
-            self.other_params.party_name].data[self.data_set])
+            self.other_params.party_name].data['data_set'])
 
         data_path = value['data_path']
         self.data = pd.read_csv(data_path)
