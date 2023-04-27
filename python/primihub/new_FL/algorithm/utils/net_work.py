@@ -52,10 +52,12 @@ class GrpcServers:
     def sender(self, key, val, dest_role=None):
         if dest_role is None:
             for role, send_channel in self.send_channels.items():
+                print("sending message: ", self.local_role + "_" + key)
                 send_channel.send(self.local_role + "_" + key,
                                   pickle.dumps(val))
         else:
             for tmp_role in dest_role:
+                print("sending message: ", self.local_role + "_" + key)
                 tmp_channel = self.send_channels.get(tmp_role, None)
                 if tmp_channel is not None:
                     tmp_channel.send(self.local_role + "_" + key,
@@ -65,11 +67,13 @@ class GrpcServers:
         results = {}
         if source_role is None:
             for tmp_role in self.remote_roles:
+                print("receiving message: ", tmp_role + "_" + key)
                 results[tmp_role] = pickle.loads(
                     self.recv_channel.recv(tmp_role + "_" + key))
 
         else:
             for tmp_role in source_role:
+                print("receiving message: ", tmp_role + "_" + key)
                 results[tmp_role] = pickle.loads(
                     self.recv_channel.recv(tmp_role + "_" + key))
 
