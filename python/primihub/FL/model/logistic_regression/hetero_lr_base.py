@@ -107,6 +107,9 @@ class HeteroLrBase(BaseModel):
         self.other_params = self.kwargs['other_params']
 
         # read from data path
+        print(
+            "=====", self.other_params.party_datasets[
+                self.other_params.party_name].data[self.data_set])
         value = eval(self.other_params.party_datasets[
             self.other_params.party_name].data[self.data_set])
 
