@@ -98,6 +98,14 @@ class HeteroLrBase(BaseModel):
 
         # set role special parameters
         self.role_params = self.kwargs['role_params']
+        self.data_set = self.role_params['data_set']
+
+        # read from data path
+        value = eval(self.other_params.party_datasets[
+            self.other_params.party_name].data[self.data_set])
+
+        data_path = value['data_path']
+        self.data = pd.read_csv(data_path)
 
         # set party node information
         self.node_info = self.kwargs['node_info']
@@ -116,9 +124,9 @@ class HeteroLrBase(BaseModel):
 
     def preprocess(self):
         if self.selected_column is not None:
-            self.data = self.data_set[self.selected_column]
+            self.data = self.data[self.selected_column]
         else:
-            self.data = self.data_set
+            self.data = self.data
 
         if self.id is not None:
             self.data.pop(self.id)
@@ -139,7 +147,6 @@ class HeteroLrHost(HeteroLrBase):
                                    task_info=self.other_params.task_info)
         self.add_noise = self.role_params['add_noise']
         self.tol = self.role_params['tol']
-        self.data_set = self.role_params['data_set']
         self.selected_column = self.role_params['selected_column']
         self.label = self.role_params['label']
         self.n_iter_no_change = self.role_params['n_iter_no_change']
