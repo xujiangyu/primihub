@@ -408,6 +408,7 @@ class HeteroLrGuest(HeteroLrBase):
         self.data_set = self.role_params['data_set']
         self.selected_column = self.role_params['selected_column']
         self.label = self.role_params['label']
+        self.id = self.role_params['id']
         self.model_path = self.role_params['model_path']
 
     def run(self):
