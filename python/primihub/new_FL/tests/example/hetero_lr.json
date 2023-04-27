@@ -61,7 +61,7 @@
                 "id": null,
                 "model_path": "guest_model.pkl",
                 "selected_column": null,
-                "label": false
+                "label": null
             }
         }
     }
