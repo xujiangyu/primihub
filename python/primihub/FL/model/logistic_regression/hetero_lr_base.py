@@ -158,6 +158,7 @@ class HeteroLrHost(HeteroLrBase):
         self.optimal_init = 1.0 / (initial_eta0 * self.alpha)
         self.n_iter_no_change = self.n_iter_no_change
         self.prob = None
+        self.update_type = None
 
     def run(self):
         self.preprocess()
