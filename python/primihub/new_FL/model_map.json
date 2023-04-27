@@ -23,11 +23,11 @@
     },
     "HeteroLR": {
         "guest": {
-            "func": "HeterLrGuest",
+            "func": "HeteroLrGuest",
             "module": "primihub.FL.model.logistic_regression.hetero_lr_base"
         },
         "host": {
-            "func": "HeterLrHost",
+            "func": "HeteroLrHost",
             "module": "primihub.FL.model.logistic_regression.hetero_lr_base"
         }
     }
