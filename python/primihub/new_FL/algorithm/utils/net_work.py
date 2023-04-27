@@ -32,8 +32,8 @@ class GrpcServers:
         self.task_info = task_info
         self.link_context = linkcontext.LinkFactory.createLinkContext(
             linkcontext.LinkMode.GRPC)
-        self.link_context.setTaskInfo(task_info['task_id'], task_info['job_id'],
-                                      task_info['request_id'])
+        self.link_context.setTaskInfo(task_info.task_id, task_info.job_id,
+                                      task_info.request_id)
         GrpcServers.build_connector(self)
 
     @staticmethod
